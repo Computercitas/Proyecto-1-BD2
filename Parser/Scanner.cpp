@@ -10,7 +10,7 @@ struct Token{
                 INSERT, DELETE, 
                 VALUES, INTO, 
                 FILE, USING, 
-                INDEX, HASH,
+                INDEX, BPLUS,
                 AVL, SEQUENTIAL,
                 BETWEEN, AND,
                 STRING, NUMBER, 
@@ -32,7 +32,7 @@ const char* Token::token_names[25] = {"select", "*",
                                         "insert", "delete", 
                                         "values", "into", 
                                         "file", "using", 
-                                        "index", "hash",
+                                        "index", "bplus",
                                         "avl", "sequential",
                                         "between", "and",
                                         "string", "number", 
@@ -96,7 +96,7 @@ Scanner::Scanner(const char* s): input(s){
     reserved["file"] = Token::FILE;
     reserved["using"] = Token::USING;
     reserved["index"] = Token::INDEX;
-    reserved["hash"] = Token::HASH;
+    reserved["bplus"] = Token::BPLUS; // bplus = anterior hash
     reserved["avl"] = Token::AVL;
     reserved["sequential"] = Token::SEQUENTIAL;
     reserved["between"] = Token::BETWEEN;
