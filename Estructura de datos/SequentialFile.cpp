@@ -81,13 +81,13 @@ private:
         ifstream file(filename, ios::in | ios::binary);
         if (!file) {throw runtime_error("No se pudo abrir el archivo");}
         file.seekg(0, ios::end);
-        int size = file.tellg() / sizeof(Registro);
+        int size = file.tellg() / sizeof(T);
         file.close();
         return size;
     }
 
     // Inserta un registro en el archivo main
-    bool add_main(Registro &registro) {
+    bool add_main(T &registro) {
         fstream file(mainFilename, ios::in | ios::out | ios::binary); // fstream para leer y escribir
         if (!file) {
             cerr << "Error al abrir el archivo " << mainFilename << endl;
@@ -97,7 +97,7 @@ private:
 
         // Si el main está vacío, simplemente insertamos el primer registro
         if (fileSize(mainFilename) == 0) {
-            file.write((char*)&registro, sizeof(Registro));
+            file.write((char*)&registro, sizeof(T));
             file.close();
             return true;
         }
@@ -105,23 +105,23 @@ private:
         //si ya hay registros en main tengo que insertar ordenadamente
         fstream tempFile("temp.dat", ios::out | ios::binary); // Creo archivo temporal
 
-        Registro temp_reg;
+        T temp_reg;
         bool inserted = false;
 
-        file.read((char*)&temp_reg, sizeof(Registro));
+        file.read((char*)&temp_reg, sizeof(T));
 
         while (!file.eof()) {
             // Verificar si es el lugar adecuado para insertar
             if (!inserted && registro.id < temp_reg.id) {
-                tempFile.write((char*)&registro, sizeof(Registro)); // Inserto el nuevo registro
+                tempFile.write((char*)&registro, sizeof(T)); // Inserto el nuevo registro
                 inserted = true;
             }
-            tempFile.write((char*)&temp_reg, sizeof(Registro)); // Copiar el registro actual
-            file.read((char*)&temp_reg, sizeof(Registro)); // Leer el siguiente registro
+            tempFile.write((char*)&temp_reg, sizeof(T)); // Copiar el registro actual
+            file.read((char*)&temp_reg, sizeof(T)); // Leer el siguiente registro
         }
         // Si aún no se ha insertado, agrego al final
         if (!inserted) {
-            tempFile.write((char*)&registro, sizeof(Registro));
+            tempFile.write((char*)&registro, sizeof(T));
         }
         file.close();
         tempFile.close();
@@ -130,14 +130,14 @@ private:
         return true;
     }
 
-    vector<Registro> loadToVec(string filename){ //Carga los elementos en espacio auxiliar a un vector
+    vector<T> loadToVec(string filename){ //Carga los elementos en espacio auxiliar a un vector
         cout << "filename: " << filename << endl;
         ifstream file(filename, ios::in | ios::binary);
         if(!file.is_open()) throw ("No se pudo abrir el archivo");
-        vector<Registro> aux;
+        vector<T> aux;
         file.seekg(0,ios::beg);
-        Registro reg;
-        while (file.read((char*)&reg, sizeof(Registro))) { //while(!file.eof()) estaba insertando doble el registro final
+        T reg;
+        while (file.read((char*)&reg, sizeof(T))) { //while(!file.eof()) estaba insertando doble el registro final
             aux.push_back(reg);
         }
         file.close();
@@ -147,8 +147,8 @@ private:
     // merge parametros: mainFile, auxFile
     void merge() {
         //Paso los datos de aux.dat a un vector para poder ordenarlos
-        vector<Registro> aux = loadToVec("sequential_aux.dat");
-        sort(aux.begin(), aux.end(), [](const Registro& a, const Registro& b) {return a.id < b.id;});
+        vector<T> aux = loadToVec("sequential_aux.dat");
+        sort(aux.begin(), aux.end(), [](const T& a, const T& b) {return a.id < b.id;});
 
         // Empiezo el merge entre main antiguo y vector aux ordenado
         ifstream file_main_old("sequential_datos.dat", ios::in | ios::binary); //para leer main
@@ -156,20 +156,20 @@ private:
 
         //insertar en orden creciente
         auto it = aux.begin();
-        Registro reg_main;
+        T reg_main;
         file_main_old.seekg(0,ios::beg);
-        file_main_old.read((char*) &reg_main, sizeof(Registro));
+        file_main_old.read((char*) &reg_main, sizeof(T));
         while(!file_main_old.eof() && it != aux.end()){
             if (reg_main.id < (*it).id){
                 if (reg_main.id != -1){
-                    merge_file.write((char*) &reg_main, sizeof(Registro));
-                    file_main_old.read((char*) &reg_main, sizeof(Registro));
+                    merge_file.write((char*) &reg_main, sizeof(T));
+                    file_main_old.read((char*) &reg_main, sizeof(T));
                 }else{//ignoro los registros borrados (tag -1)
-                    file_main_old.read((char*) &reg_main, sizeof(Registro));
+                    file_main_old.read((char*) &reg_main, sizeof(T));
                 }
             }else if (reg_main.id >= (*it).id){
                 if (reg_main.id != -1){
-                    merge_file.write((char*) &(*it), sizeof(Registro));
+                    merge_file.write((char*) &(*it), sizeof(T));
                     ++it;
                 }else{ //ignoro los registros borrados (tag -1)
                     ++it;
@@ -179,16 +179,16 @@ private:
         //terminar de insertar elementos faltantes del main antiguo
         while(!file_main_old.eof()){
             if (reg_main.id != -1){ 
-                merge_file.write((char*) &reg_main, sizeof(Registro));
-                file_main_old.read((char*) &reg_main, sizeof(Registro));
+                merge_file.write((char*) &reg_main, sizeof(T));
+                file_main_old.read((char*) &reg_main, sizeof(T));
             }else{ //ignoro los registros borrados (tag -1)
-                file_main_old.read((char*) &reg_main, sizeof(Registro));
+                file_main_old.read((char*) &reg_main, sizeof(T));
             }
         }
         //terminar de insertar elementos faltandes del aux ordenado
         while(it != aux.end()){
             if ((*it).id != -1){ 
-                merge_file.write((char*) &(*it), sizeof(Registro));
+                merge_file.write((char*) &(*it), sizeof(T));
                 ++it;
             }else{ //ignoro los registros borrados (tag -1)
                 ++it;
@@ -208,7 +208,7 @@ private:
     }
 
 public:
-    bool add(Registro registro) { //insertar al final del archivo auxiliar
+    bool add(T registro) { //insertar al final del archivo auxiliar
         ofstream file(auxFilename, ios::out | ios::app | ios::binary);
         if (!file) {throw runtime_error("No se pudo abrir el archivo");}
         file.seekp(0, ios::end);
@@ -222,10 +222,10 @@ public:
         }
 
         if (sizeAux < log(sizeMain)){ //verifico si aux no está lleno
-            file.write((char*) &registro, sizeof(Registro)); //escribo en el aux
+            file.write((char*) &registro, sizeof(T)); //escribo en el aux
         }else{
             merge();
-            file.write((char*) &registro, sizeof(Registro)); //escribo en el aux
+            file.write((char*) &registro, sizeof(T)); //escribo en el aux
         }
         file.close();
         return true;
@@ -235,17 +235,17 @@ public:
         ifstream file(filename, ios::in | ios::binary);
         if (!file) {throw runtime_error("Error al abrir archivo");}
         file.seekg(0,ios::beg);
-        Registro reg;
+        T reg;
         cout << filename << " contents:" << endl;
         while(file.peek() != EOF){
-            file.read((char*) &reg, sizeof(Registro));
+            file.read((char*) &reg, sizeof(T));
             reg.showData();
         }
         file.close();
     }
 
-    vector<Registro> search(int key) {
-        vector<Registro> result;
+    vector<T> search(int key) {
+        vector<T> result;
         // considerar
         // 1. Si el rango de busqueda esta en el main: Solo busco en el main
         // 2. Si el rango de busqueda esta en el aux: Busco en el aux
@@ -261,15 +261,15 @@ public:
             throw runtime_error("No se pudo abrir el archivo auxiliar");
         }
 
-        Registro registro;
+        T registro;
 
         // Busqueda en el main
         mainFile.seekg(0, ios::end);
-        int sizeMain = (int)mainFile.tellg() / sizeof(Registro);
+        int sizeMain = (int)mainFile.tellg() / sizeof(T);
         mainFile.seekg(0, ios::beg);
 
         for (int i = 0; i < sizeMain; i++) {
-            mainFile.read((char*)&registro, sizeof(Registro));
+            mainFile.read((char*)&registro, sizeof(T));
             if (registro.id == key) {
                 result.push_back(registro);
             }
@@ -277,11 +277,11 @@ public:
 
         // Busqueda en el aux
         auxFile.seekg(0, ios::end);
-        int size = (int)auxFile.tellg() / sizeof(Registro);
+        int size = (int)auxFile.tellg() / sizeof(T);
         auxFile.seekg(0, ios::beg);
 
         for (int i = 0; i < size; i++) {
-            auxFile.read((char*)&registro, sizeof(Registro));
+            auxFile.read((char*)&registro, sizeof(T));
             if (registro.id == key) {
                 result.push_back(registro);
             }
@@ -293,8 +293,8 @@ public:
         return result;
     }
 
-    vector<Registro> rangeSearch(int begin_id, int end_id) {
-        vector<Registro> registros;
+    vector<T> rangeSearch(int begin_id, int end_id) {
+        vector<T> registros;
         // Abro ambos archivos, main y aux
         ifstream mainFile(mainFilename, ios::binary);
         if (!mainFile.is_open()) {
@@ -304,15 +304,15 @@ public:
         if (!auxFile.is_open()) {
             throw runtime_error("No se pudo abrir el archivo auxiliar");
         }
-        Registro registro;
+        T registro;
 
         // Busqueda en el main
         mainFile.seekg(0, ios::end);
-        int sizeMain = (int)mainFile.tellg() / sizeof(Registro);
+        int sizeMain = (int)mainFile.tellg() / sizeof(T);
         mainFile.seekg(0, ios::beg);
 
         for (int i = 0; i < sizeMain; i++) {
-            mainFile.read((char*)&registro, sizeof(Registro));
+            mainFile.read((char*)&registro, sizeof(T));
             if (registro.id >= begin_id && registro.id <= end_id) {
                 registros.push_back(registro);
             }
@@ -320,11 +320,11 @@ public:
 
         // Busqueda en el aux
         auxFile.seekg(0, ios::end);
-        int size = (int)auxFile.tellg() / sizeof(Registro);
+        int size = (int)auxFile.tellg() / sizeof(T);
         auxFile.seekg(0, ios::beg);
 
         for (int i = 0; i < size; i++) {
-            auxFile.read((char*)&registro, sizeof(Registro));
+            auxFile.read((char*)&registro, sizeof(T));
             if (registro.id >= begin_id && registro.id <= end_id) {
                 registros.push_back(registro);
             }
@@ -342,13 +342,13 @@ public:
     }
     void remove(int id, string filename) { //borrar todos los registros con un mismo id
         fstream file(filename, ios::in | ios::out | ios::binary);  
-        Registro reg; 
-        while (file.read((char*)&reg, sizeof(Registro))) {
+        T reg; 
+        while (file.read((char*)&reg, sizeof(T))) {
             if (reg.id == id) {
-                int position = file.tellg() - sizeof(Registro); 
+                int position = file.tellg() - sizeof(T); 
                 file.seekp(position, ios::beg); 
                 reg.id = -1;  
-                file.write((char*)&reg, sizeof(Registro));  
+                file.write((char*)&reg, sizeof(T));  
             }
         }
         file.close();
@@ -356,8 +356,7 @@ public:
 
 
 };
-
-
+    
 int main(){
     //Old tests
     
@@ -438,4 +437,4 @@ int main(){
     delete seq;
     
     return 0;
-}
+};
