@@ -65,11 +65,13 @@ public:
         fileAux.close();
     }
 
-    ~SequentialFile(){//TODO: QUITAR ESTO antes de poner en prod (borro para probar mas rapido)
-        std::remove("sequential_datos_old.dat");
-        std::remove("sequential_aux_old.dat");
-        std::remove("sequential_datos.dat");
-        std::remove("sequential_aux.dat");
+    ~SequentialFile(){
+        //std::remove("sequential_datos_old.dat");
+        //std::remove("sequential_aux_old.dat");
+        //std::remove("sequential_datos.dat");
+        //std::remove("sequential_aux.dat");
+        mainFilename = "";
+        auxFilename = "";
     }
 
 private:
@@ -357,6 +359,8 @@ public:
 
 
 int main(){
+    //Old tests
+    
     Registro r1 = Registro(32,"davi","scooter");
     Registro r2 = Registro(12,"edizon","cuaderno");
     Registro r3 = Registro(8,"sergio","lapiz");
@@ -419,7 +423,6 @@ int main(){
 
 
     //search
-    /*
     vector<Registro> reg = seq->search(13);
     for (auto r : reg) {
         r.showData();
@@ -429,12 +432,10 @@ int main(){
     for (auto r : regs) {
         r.showData();
     }
-    */
-
-
     cout << endl << endl;
     seq->print_file("sequential_datos.dat");
     seq->print_file("sequential_aux.dat");
     delete seq;
+    
     return 0;
 }
