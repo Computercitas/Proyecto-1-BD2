@@ -1,5 +1,11 @@
 #include <iostream>
+#include <vector>
+#include <string.h>
+#include <fstream>
+#include <algorithm>
+#include <sstream>
 #include <string>
+#include <cmath>
 using namespace std;
 //ejemplo de data
 /*
@@ -26,7 +32,7 @@ struct BX_Books {
         this->year_of_publication = year_of_publication;
     }
 
-    void showData(){
+    void showData() const {
         cout << "ISBN: " << isbn << endl;
         cout << "Book Title:" << book_title << endl;
         cout << "Book Author: " << book_author << endl;

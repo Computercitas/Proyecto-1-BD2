@@ -1,50 +1,8 @@
-#include <iostream>
-#include <vector>
-#include <string.h>
-#include <fstream>
-#include <algorithm>
-#include <sstream>
-#include <string>
-#include <cmath>
+
 #include "BX_Books.h"
 using namespace std;
 
-#define min_size_main 4 //cantidad minima de registros en el main para poder insertar en aux
-
-//Solo para probar la estructura
-struct Registro {
-    int isbn;
-    char nombre[20];
-    char producto[20];
-
-public:
-    Registro(){}
-    Registro(int isbn, string nombre, string producto){
-        this->isbn = isbn;
-        strncpy(this->nombre, nombre.c_str(), 20); 
-        strncpy(this->producto, producto.c_str(), 20);
-    }
-
-    void setData(){
-        cout<<"isbn:";
-        cin>>isbn;
-        cout<<"Nombre:";
-        cin>>nombre;
-    }
-
-    void showData(){
-        cout<<"isbn:"<<isbn
-            <<"\tNombre:"<<nombre
-            <<"\tProducto:"<<producto<<endl;
-    }
-
-    // sobrecarga de operador ==
-    bool operator==(const Registro& other) const {
-        return isbn == other.isbn && strcmp(nombre, other.nombre) == 0 && strcmp(producto, other.producto) == 0;
-    }
-
-    //TODO: destructor
-};
+#define min_size_main 100 //cantidad minima de registros en el main para poder insertar en aux
 
 
 template <class T>
@@ -409,28 +367,3 @@ void parse_line(const string& line, BX_Books& book) {
     strncpy(book.publisher, token.c_str(), sizeof(book.publisher) - 1);
     book.publisher[sizeof(book.publisher) - 1] = '\0'; // Ensure null-termination
 }
-int main(){
-
-    
-    SequentialFile<BX_Books> * seq = new SequentialFile<BX_Books>();
-    
-    ifstream bx_books("../data/BX_Books.csv");
-    if (!bx_books) {throw runtime_error("No se pudo abrir el archivo");}
-    string line;
-    BX_Books book;
-
-    getline(bx_books, line); // saltar header
-    int i=2;
-    while (getline(bx_books, line)) { // insertar cada linea del csv en sequential file
-        parse_line(line, book);  
-        seq->add(book);  
-        if(i%500 == 0){
-            cout <<"insertado: " <<i << endl;
-        }
-        i+=1;
-        
-    }
-   
-    delete seq;
-    return 0;
-};
