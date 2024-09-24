@@ -3,41 +3,44 @@
 #include <string.h>
 #include <fstream>
 #include <algorithm>
+#include <sstream>
 #include <string>
 #include <cmath>
+#include "BX_Books.h"
 using namespace std;
 
 #define min_size_main 4 //cantidad minima de registros en el main para poder insertar en aux
 
+//Solo para probar la estructura
 struct Registro {
-    int id;
+    int isbn;
     char nombre[20];
     char producto[20];
 
 public:
     Registro(){}
-    Registro(int id, string nombre, string producto){
-        this->id = id;
+    Registro(int isbn, string nombre, string producto){
+        this->isbn = isbn;
         strncpy(this->nombre, nombre.c_str(), 20); 
         strncpy(this->producto, producto.c_str(), 20);
     }
 
     void setData(){
-        cout<<"ID:";
-        cin>>id;
+        cout<<"isbn:";
+        cin>>isbn;
         cout<<"Nombre:";
         cin>>nombre;
     }
 
     void showData(){
-        cout<<"ID:"<<id
+        cout<<"isbn:"<<isbn
             <<"\tNombre:"<<nombre
             <<"\tProducto:"<<producto<<endl;
     }
 
     // sobrecarga de operador ==
     bool operator==(const Registro& other) const {
-        return id == other.id && strcmp(nombre, other.nombre) == 0 && strcmp(producto, other.producto) == 0;
+        return isbn == other.isbn && strcmp(nombre, other.nombre) == 0 && strcmp(producto, other.producto) == 0;
     }
 
     //TODO: destructor
@@ -112,7 +115,7 @@ private:
 
         while (!file.eof()) {
             // Verificar si es el lugar adecuado para insertar
-            if (!inserted && registro.id < temp_reg.id) {
+            if (!inserted && stoll(registro.isbn) < stoll(temp_reg.isbn)) { //convierto char a long
                 tempFile.write((char*)&registro, sizeof(T)); // Inserto el nuevo registro
                 inserted = true;
             }
@@ -131,7 +134,6 @@ private:
     }
 
     vector<T> loadToVec(string filename){ //Carga los elementos en espacio auxiliar a un vector
-        cout << "filename: " << filename << endl;
         ifstream file(filename, ios::in | ios::binary);
         if(!file.is_open()) throw ("No se pudo abrir el archivo");
         vector<T> aux;
@@ -148,7 +150,7 @@ private:
     void merge() {
         //Paso los datos de aux.dat a un vector para poder ordenarlos
         vector<T> aux = loadToVec("sequential_aux.dat");
-        sort(aux.begin(), aux.end(), [](const T& a, const T& b) {return a.id < b.id;});
+        sort(aux.begin(), aux.end(), [](const T& a, const T& b) {return stoll(a.isbn) < stoll(b.isbn);});
 
         // Empiezo el merge entre main antiguo y vector aux ordenado
         ifstream file_main_old("sequential_datos.dat", ios::in | ios::binary); //para leer main
@@ -160,15 +162,15 @@ private:
         file_main_old.seekg(0,ios::beg);
         file_main_old.read((char*) &reg_main, sizeof(T));
         while(!file_main_old.eof() && it != aux.end()){
-            if (reg_main.id < (*it).id){
-                if (reg_main.id != -1){
+            if (stoll(reg_main.isbn) < stoll((*it).isbn)){
+                if (stoll(reg_main.isbn) != -1){
                     merge_file.write((char*) &reg_main, sizeof(T));
                     file_main_old.read((char*) &reg_main, sizeof(T));
                 }else{//ignoro los registros borrados (tag -1)
                     file_main_old.read((char*) &reg_main, sizeof(T));
                 }
-            }else if (reg_main.id >= (*it).id){
-                if (reg_main.id != -1){
+            }else if (stoll(reg_main.isbn) >= stoll((*it).isbn)){
+                if (stoll(reg_main.isbn) != -1){
                     merge_file.write((char*) &(*it), sizeof(T));
                     ++it;
                 }else{ //ignoro los registros borrados (tag -1)
@@ -178,7 +180,7 @@ private:
         }
         //terminar de insertar elementos faltantes del main antiguo
         while(!file_main_old.eof()){
-            if (reg_main.id != -1){ 
+            if (stoll(reg_main.isbn) != -1){ 
                 merge_file.write((char*) &reg_main, sizeof(T));
                 file_main_old.read((char*) &reg_main, sizeof(T));
             }else{ //ignoro los registros borrados (tag -1)
@@ -187,7 +189,7 @@ private:
         }
         //terminar de insertar elementos faltandes del aux ordenado
         while(it != aux.end()){
-            if ((*it).id != -1){ 
+            if (stoll((*it).isbn) != -1){ 
                 merge_file.write((char*) &(*it), sizeof(T));
                 ++it;
             }else{ //ignoro los registros borrados (tag -1)
@@ -270,7 +272,7 @@ public:
 
         for (int i = 0; i < sizeMain; i++) {
             mainFile.read((char*)&registro, sizeof(T));
-            if (registro.id == key) {
+            if (stoll(registro.isbn) == key) {
                 result.push_back(registro);
             }
         }
@@ -282,7 +284,7 @@ public:
 
         for (int i = 0; i < size; i++) {
             auxFile.read((char*)&registro, sizeof(T));
-            if (registro.id == key) {
+            if (stoll(registro.isbn) == key) {
                 result.push_back(registro);
             }
         }
@@ -313,7 +315,7 @@ public:
 
         for (int i = 0; i < sizeMain; i++) {
             mainFile.read((char*)&registro, sizeof(T));
-            if (registro.id >= begin_id && registro.id <= end_id) {
+            if (stoll(registro.isbn) >= begin_id && stoll(registro.isbn) <= end_id) {
                 registros.push_back(registro);
             }
         }
@@ -325,7 +327,7 @@ public:
 
         for (int i = 0; i < size; i++) {
             auxFile.read((char*)&registro, sizeof(T));
-            if (registro.id >= begin_id && registro.id <= end_id) {
+            if (stoll(registro.isbn) >= begin_id && stoll(registro.isbn) <= end_id) {
                 registros.push_back(registro);
             }
         }
@@ -336,18 +338,18 @@ public:
         return registros;
     }
 
-    void remove(int id) { //borrar todos los registros con un mismo id
-        remove(id, mainFilename);
-        remove(id, auxFilename);
+    void remove(string isbn) { //borrar todos los registros con un mismo isbn
+        remove(stoll(isbn), mainFilename);
+        remove(stoll(isbn), auxFilename);
     }
-    void remove(int id, string filename) { //borrar todos los registros con un mismo id
+    void remove(string isbn, string filename) { //borrar todos los registros con un mismo isbn
         fstream file(filename, ios::in | ios::out | ios::binary);  
         T reg; 
         while (file.read((char*)&reg, sizeof(T))) {
-            if (reg.id == id) {
+            if (stoll(reg.isbn) == stoll(isbn)) {
                 int position = file.tellg() - sizeof(T); 
                 file.seekp(position, ios::beg); 
-                reg.id = -1;  
+                stoll(reg.isbn) = -1;  
                 file.write((char*)&reg, sizeof(T));  
             }
         }
@@ -356,85 +358,79 @@ public:
 
 
 };
+void custom_getline(stringstream& ss, string& token) {
+    token.clear(); // Clear the token
+    char ch;
+    bool in_quotes = false;
+
+    while (ss.get(ch)) {
+        if (ch == '\"') {
+            in_quotes = !in_quotes; // Toggle the in_quotes flag
+        } else if (ch == ';' && !in_quotes) {
+            // If we encounter a semicolon and we're not inside quotes, break
+            break;
+        }
+        token += ch; // Add character to token
+    }
     
+    // Trim any trailing spaces that might have been added
+    while (!token.empty() && isspace(token.back())) {
+        token.pop_back();
+    }
+}
+void parse_line(const string& line, BX_Books& book) {
+    stringstream ss(line);
+    string token;
+
+    // Parse ISBN
+    custom_getline(ss, token);
+    strncpy(book.isbn, token.c_str(), sizeof(book.isbn) - 1);
+    book.isbn[sizeof(book.isbn) - 1] = '\0'; // Ensure null-termination
+
+    // Parse Book Title
+    custom_getline(ss, token);
+    strncpy(book.book_title, token.c_str(), sizeof(book.book_title) - 1);
+    book.book_title[sizeof(book.book_title) - 1] = '\0'; // Ensure null-termination
+
+    // Parse Book Author
+    custom_getline(ss, token);
+    strncpy(book.book_author, token.c_str(), sizeof(book.book_author) - 1);
+    book.book_author[sizeof(book.book_author) - 1] = '\0'; // Ensure null-termination
+
+    // Parse Year of Publication
+    custom_getline(ss, token);
+    if (token.empty() || !all_of(token.begin(), token.end(), ::isdigit)) {
+        throw runtime_error("Invalid year of publication: " + token);
+    }
+    book.year_of_publication = static_cast<unsigned short>(stoi(token));
+
+    // Parse Publisher
+    custom_getline(ss, token);
+    strncpy(book.publisher, token.c_str(), sizeof(book.publisher) - 1);
+    book.publisher[sizeof(book.publisher) - 1] = '\0'; // Ensure null-termination
+}
 int main(){
-    //Old tests
+
     
-    Registro r1 = Registro(32,"davi","scooter");
-    Registro r2 = Registro(12,"edizon","cuaderno");
-    Registro r3 = Registro(8,"sergio","lapiz");
-    Registro r4 = Registro(50,"napa","algoritmos");
+    SequentialFile<BX_Books> * seq = new SequentialFile<BX_Books>();
+    
+    ifstream bx_books("../data/BX_Books.csv");
+    if (!bx_books) {throw runtime_error("No se pudo abrir el archivo");}
+    string line;
+    BX_Books book;
 
-    Registro r5 = Registro(5,"juancito","galletas");
-    Registro r6 = Registro(18,"heider","DB");
-    Registro r7 = Registro(2,"camila","botella");
-    Registro r8 = Registro(3,"jorgito","plato");
-
-    Registro r9 = Registro(23,"pedro","ceviche");
-    Registro r10 = Registro(1,"juan","pescado");
-    Registro r11 = Registro(4,"maria","arroz");
-    Registro r12 = Registro(6,"luis","papa");
-
-    Registro r13 = Registro(7,"lucas","carne");
-    Registro r14 = Registro(9,"lucia","pollo");
-    Registro r15 = Registro(10,"luciano","pasta");
-    Registro r16 = Registro(11,"luciana","pizza");
-
-    Registro r17 = Registro(13,"lucila","hamburguesa");
-    Registro r18 = Registro(14,"lucio","tacos");
-
-    SequentialFile<Registro> *seq = new SequentialFile<Registro>();
-    seq->add(r1);
-    seq->add(r2);
-    seq->add(r3);
-    seq->add(r4);
-    seq->add(r5);
-
-    seq->remove(5);
-    seq->remove(50);
-
-    seq->add(r6);
-    seq->add(r7);
-    seq->print_file("sequential_datos.dat");
-    seq->print_file("sequential_aux.dat");
-
-    seq->add(r8);
-    seq->add(r9);
-    seq->add(r10);
-    seq->add(r11);
-    seq->add(r12);
-
-    seq->add(r13);
-    seq->remove(4);
-    seq->remove(6);
-
-    seq->add(r14);
-    seq->add(r15);
-    seq->add(r16);
-    seq->add(r17);
-    seq->add(r18);
-
-
-    seq->print_file("sequential_datos.dat");
-    seq->print_file("sequential_aux.dat");
-
-    //remove
-
-
-    //search
-    vector<Registro> reg = seq->search(13);
-    for (auto r : reg) {
-        r.showData();
+    getline(bx_books, line); // saltar header
+    int i=2;
+    while (getline(bx_books, line)) { // insertar cada linea del csv en sequential file
+        parse_line(line, book);  
+        seq->add(book);  
+        if(i%500 == 0){
+            cout <<"insertado: " <<i << endl;
+        }
+        i+=1;
+        
     }
-    cout << "Registros encontrados: " << endl;
-    vector<Registro> regs = seq->rangeSearch(1, 22);
-    for (auto r : regs) {
-        r.showData();
-    }
-    cout << endl << endl;
-    seq->print_file("sequential_datos.dat");
-    seq->print_file("sequential_aux.dat");
+   
     delete seq;
-    
     return 0;
 };
