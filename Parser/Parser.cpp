@@ -134,10 +134,22 @@ Parser::Parser(Scanner* sc):scanner(sc) {
 };
 
 bool Parser::parse() {
-  current = scanner->nextToken();
-  if (check(Token::ERR)) {
-      cout << "Error en scanner - caracter invalido" << endl;
-      exit(0);
+  if (match(Token::CREATE)) {
+    pcreate_table();
+    return true;
   }
-  //aplicar logica para los comando sql como select, insert, delete, ...
+  if (match(Token::SELECT)) {
+    pselect();
+    return true;
+  }
+  if (match(Token::INSERT)) {
+    pinsert();
+    return true;
+  }
+  if (match(Token::DELETE)) {
+    pdelete();
+    return true;
+  }
+  cout << "No ha introducido un comando valido"<<endl;
+  exit(0);
 }
