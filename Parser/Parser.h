@@ -57,7 +57,10 @@ private:
   bool check(Token::Type ttype);
   bool advance();
   bool isAtEnd();
-
+  void pcreate_table();
+  void pselect();
+  void pdelete();
+  void pinsert();
 
 public:
     Parser(Scanner* scanner);
