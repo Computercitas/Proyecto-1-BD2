@@ -30,18 +30,6 @@ ostream& operator << (ostream& out, const Token* tok){
 }
 
 
-std::ostream& operator << ( std::ostream& outs, const Token & tok )
-{
-  if (tok.lexema.empty())
-    return outs << Token::token_names[tok.type];
-  else
-    return outs << Token::token_names[tok.type] << "(" << tok.lexema << ")";
-}
-
-std::ostream& operator << ( std::ostream& outs, const Token* tok ) {
-  return outs << *tok;
-}
-
 //---------------------------Table:
 class Table {
 public:
