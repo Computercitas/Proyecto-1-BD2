@@ -59,8 +59,12 @@ private:
 //----------Token:
 class Token {
 public:
-  enum Type { SELECT, CREATE, TABLE, FROM, ALL, WHERE, DELETE, EQUAL, BETWEEN, AND, INSERT, INTO, VALUES, FILE, LPARENT, RPARENT, INDEX, USING, BPLUS, AVL, SEQUENTIAL, END, ERR, SEMICOLON, COLON, ID, NUM, VALUE, FILENAME, TRUE, FALSE};
-  static const char* token_names[25]; 
+  enum Type { CREATE, TABLE, FILE, USING, INDEX, BPLUS, AVL, SEQUENTIAL, SELECT, ALL,
+  FROM, WHERE, EQUAL, ID, STRING, NUMBER, BETWEEN, AND, INSERT, INTO,
+  VALUES, LPARENT, RPARENT, DELETE, END, ERR, SEMICOLON, COLON, FILENAME, VALUEPAREN,
+  TRUE, FALSE};
+
+  static const char* token_names[32]; 
   Type type;
   string lexema;
   Token(Type type):type(type) { lexema = ""; }
@@ -70,9 +74,11 @@ public:
   }
 };
 
-const char* Token::token_names[25] = {
+const char* Token::token_names[32] = {
   "create", "table", "file", "using", "index", "bplus", "avl", "sequential", "select", "*",
-   "from", "where", "=", "ID", "string", "number", "between", "and", "insert", "into", "values", "(", ")","ValueParen", "delete"};
+  "from", "where", "=", "ID", "string", "number", "between", "and", "insert", "into",
+  "values", "(", ")", "delete", "end", "err", "semicolon", "colon", "filename", "ValueParen",
+  "true","false"};
 
 
 std::ostream& operator << ( std::ostream& outs, const Token & tok ){
