@@ -14,6 +14,8 @@ public:
 
     // Ejecuta la creación de la tabla desde un archivo CSV
     void execute(CreateTableStatement* stmt) {
+        cout << "Executing CREATE TABLE: " << stmt->table_name << endl;  // Depuración
+        cout << "Reading data from file: " << stmt->file_path << endl;   // 
         ifstream bx_books(stmt->file_path);  // Abrir el archivo CSV desde la consulta
         if (!bx_books) {
             throw runtime_error("No se pudo abrir el archivo CSV");

@@ -44,40 +44,62 @@ Token* Scanner::nextToken() {
     Token* token;
     char c;
 
-    // consume whitespaces
+    // Consume espacios en blanco
     c = nextChar();
-    while (c == ' ') c = nextChar();
+    while (isspace(c)) c = nextChar();
+    
     if (c == '\0') return new Token(Token::END);
-    startLexema();
+    
+    startLexema(); // Comienza a construir el lexema
+
+    // Manejo de palabras reservadas o identificadores
     if (isalpha(c)) {
-        c = nextChar();
         while (isalpha(c) || isdigit(c) || c == '_') c = nextChar();
-        rollBack();
+        rollBack(); // Retrocede para no perder el último carácter
         string lex = getLexema();
         Token::Type ttype = checkReserved(lex);
-        if (ttype != Token::ERR)
+        if (ttype != Token::ERR) {
             token = new Token(ttype);
-        else
-            token = new Token(Token::ID, getLexema());
-    }
-    else if (strchr("()/*\";=.", c)) {
-        switch (c) {
-        case '(': token = new Token(Token::LPAREN); break;
-        case ')': token = new Token(Token::RPAREN); break;
-        case '*': token = new Token(Token::ALL); break; 
-        case ';': token = new Token(Token::SEMICOLON); break;
-        case '=': token = new Token(Token::ASSIGN); break;
-        case '\"': token = new Token(Token::COMILLAS); break;
-        case '/': token = new Token(Token::SLASH);break;
-        case '.': token = new Token(Token::POINT);break;
-        default: cout << "No debería llegar acá" << endl;
+        } else {
+            token = new Token(Token::ID, lex);
         }
     }
+    // Manejo de caracteres especiales, incluyendo comillas
+    else if (strchr("()/*\";=.", c)) {
+        switch (c) {
+            case '(': token = new Token(Token::LPAREN); break;
+            case ')': token = new Token(Token::RPAREN); break;
+            case '*': token = new Token(Token::ALL); break;
+            case ';': token = new Token(Token::SEMICOLON); break;
+            case '=': token = new Token(Token::ASSIGN); break;
+            case '\"': { // Manejo de comillas
+                string lexeme;
+                c = nextChar();
+                while (c != '\"' && c != '\0') {
+                    lexeme += c; // Captura el contenido entre comillas
+                    c = nextChar();
+                }
+                if (c == '\"') { // Si encontramos otra comilla, creamos el token
+                    token = new Token(Token::COMILLAS, lexeme);
+                } else {
+                    // Error si se encuentra un final de cadena sin una comilla de cierre
+                    token = new Token(Token::ERR, "Unmatched quotes");
+                }
+                break; // Salimos del switch
+            }
+            case '/': token = new Token(Token::SLASH); break;
+            case '.': token = new Token(Token::POINT); break;
+            default: cout << "No debería llegar acá" << endl; break;
+        }
+    }
+    // Manejo de caracteres no reconocidos
     else {
         token = new Token(Token::ERR, getLexema());
     }
-    return token;
+    
+    return token; // Retornar el token creado
 }
+
 
 Scanner::~Scanner() { }
 
@@ -153,7 +175,10 @@ Program* Parser::parse() {
         cout << "Error en scanner - carácter inválido" << endl;
         exit(0);
     }
+
     Program* p = parseProgram();
+    
+    // Verifica si se ha llegado al final de la entrada (END)
     if (current->type != Token::END) {
         cout << "Esperaba fin-de-input, se encontró " << current << endl;
         delete p; // Liberar memoria si hay un error
@@ -166,10 +191,15 @@ Program* Parser::parse() {
 
 Program* Parser::parseProgram() {
     Program* p = new Program(); // Usar new para crear el programa
+
+    // Consume todas las declaraciones
     p->add(parseStatement());
+
     while (match(Token::SEMICOLON)) {
+        // Consume todas las declaraciones separadas por punto y coma
         p->add(parseStatement());
     }
+
     return p;
 }
 
@@ -177,26 +207,30 @@ Stm* Parser::parseStatement() {
     Stm* s = nullptr;
 
     if (match(Token::CREATE)) {
-        if (match(Token::TABLE)) {
-            if (match(Token::ID)) {
-                string table_id = previous->lexema;
-                if (match(Token::FROM)) {
-                    if (match(Token::FILE)) {
-                        if (match(Token::COMILLAS)) {
-                            string file_path;
-                            while (!match(Token::COMILLAS)) {
-                                file_path += previous->lexema;
-                                advance();
-                            }
-                            if (match(Token::USING)) {
-                                if (match(Token::INDEX)) {
-                                    if (match(Token::SEQUENTIAL)) {
-                                        if (match(Token::LPAREN)) {
-                                            if (match(Token::ID)) {
-                                                string key = previous->lexema;  // Debería ser "ISBN"
-                                                if (match(Token::RPAREN)) {
-                                                    return new CreateTableStatement(table_id, file_path, key);
-                                                }
+    cout << "CREATE statement recognized." << endl;  // Depuración
+    if (match(Token::TABLE)) {
+        cout << "TABLE keyword recognized." << endl;  // Depuración
+        if (match(Token::ID)) {
+            string table_id = previous->lexema;
+            cout << "Table ID: " << table_id << endl;  // Depuración
+            if (match(Token::FROM)) {
+                if (match(Token::FILE)) {
+                    if (match(Token::COMILLAS)) {
+                        string file_path;
+                        while (!match(Token::COMILLAS)) {
+                            file_path += previous->lexema;
+                            advance();
+                        }
+                        cout << "File path: " << file_path << endl;  // Depuración
+                        if (match(Token::USING)) {
+                            if (match(Token::INDEX)) {
+                                if (match(Token::SEQUENTIAL)) {
+                                    if (match(Token::LPAREN)) {
+                                        if (match(Token::ID)) {
+                                            string key = previous->lexema;
+                                            if (match(Token::RPAREN)) {
+                                                cout << "CREATE statement parsed successfully with key: " << key << endl;
+                                                return new CreateTableStatement(table_id, file_path, key);
                                             }
                                         }
                                     }
@@ -207,7 +241,8 @@ Stm* Parser::parseStatement() {
                 }
             }
         }
-    } else if (match(Token::SELECT)) {
+    }
+} else if (match(Token::SELECT)) {
         if (match(Token::ALL)) { // Reconocer * en SELECT
             if (match(Token::FROM)) {
                 if (match(Token::ID)) {
@@ -217,17 +252,12 @@ Stm* Parser::parseStatement() {
                             string column = previous->lexema; // Debería ser "ISBN"
                             if (match(Token::ASSIGN)) {
                                 if (match(Token::ID)) {
-                                    string value = previous->lexema; // Valor esperado para ISBN
-                                    return new SelectStatement(table_name, column, value);
-                                }
-                            } else if (match(Token::BETWEEN)) { // Búsqueda por rango con BETWEEN
-                                if (match(Token::ID)) {
-                                    string value1 = previous->lexema;
-                                    if (match(Token::AND)) {
-                                        if (match(Token::ID)) {
-                                            string value2 = previous->lexema;
-                                            return new SelectStatement(table_name, column, value1, true, value2);
-                                        }
+                                    string value = previous->lexema;
+                                    if (match(Token::SEMICOLON)) { // Verificar si hay un punto y coma al final
+                                        return new SelectStatement(table_name, column, value);
+                                    } else {
+                                        cout << "Error: Se esperaba un ';' después de SELECT." << endl;
+                                        exit(1);
                                     }
                                 }
                             }
@@ -247,7 +277,12 @@ Stm* Parser::parseStatement() {
                             values.push_back(previous->lexema);
                             advance();
                         }
-                        return new InsertStatement(table_name, values);
+                        if (match(Token::SEMICOLON)) { // Verificar si hay un punto y coma al final
+                            return new InsertStatement(table_name, values);
+                        } else {
+                            cout << "Error: Se esperaba un ';' después de INSERT." << endl;
+                            exit(1);
+                        }
                     }
                 }
             }
@@ -258,11 +293,16 @@ Stm* Parser::parseStatement() {
                 string table_name = previous->lexema;
                 if (match(Token::WHERE)) {
                     if (match(Token::ID)) {
-                        string column = previous->lexema; // Debería ser "ISBN"
+                        string column = previous->lexema;
                         if (match(Token::ASSIGN)) {
                             if (match(Token::ID)) {
                                 string value = previous->lexema;
-                                return new DeleteStatement(table_name, column, value);
+                                if (match(Token::SEMICOLON)) { // Verificar si hay un punto y coma al final
+                                    return new DeleteStatement(table_name, column, value);
+                                } else {
+                                    cout << "Error: Se esperaba un ';' después de DELETE." << endl;
+                                    exit(1);
+                                }
                             }
                         }
                     }
@@ -273,6 +313,7 @@ Stm* Parser::parseStatement() {
 
     return nullptr; // Si no reconoce el comando
 }
+
 
 /*
 Exp* Parser::parseTerm() {
