@@ -57,6 +57,10 @@ private:
   bool check(Token::Type ttype);
   bool advance();
   bool isAtEnd();
+  void select();
+  void insert();
+  void create();
+  void del();
 
 
 public:
