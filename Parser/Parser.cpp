@@ -56,24 +56,35 @@ private:
 };
 
 
-const char* Token::token_names[25] = { "select", "*", 
-                                        "from", "table", 
-                                        "where", "create", 
-                                        "insert", "delete", 
-                                        "values", "into", 
-                                        "file", "using", 
-                                        "index", "hash",
-                                        "avl", "sequential",
-                                        "between", "and",
-                                        "string", "number", 
-                                        "=","ID",
-                                        "(", ")","ValueParen" };
+//----------Token:
+class Token {
+public:
+  enum Type { SELECT, CREATE, TABLE, FROM, ALL, WHERE, DELETE, EQUAL, BETWEEN, AND, INSERT, INTO, VALUES, FILE, LPARENT, RPARENT, INDEX, USING, BPLUS, AVL, SEQUENTIAL, END, ERR, SEMICOLON, COLON, ID, NUM, VALUE, FILENAME, TRUE, FALSE};
+  static const char* token_names[25]; 
+  Type type;
+  string lexema;
+  Token(Type type):type(type) { lexema = ""; }
+  Token(Type, char c);
+  Token(Type type, const string source):type(type) {
+    lexema = source;
+  }
+};
 
-Token::Token(Type type):type(type) { lexema = ""; }
+const char* Token::token_names[25] = {
+  "create", "table", "file", "using", "index", "bplus", "avl", "sequential", "select", "*",
+   "from", "where", "=", "ID", "string", "number", "between", "and", "insert", "into", "values", "(", ")","ValueParen", "delete"};
 
-Token::Token(Type type, const string source):type(type) {
-  lexema = source;
+
+std::ostream& operator << ( std::ostream& outs, const Token & tok ){
+    if (tok.lexema.empty())
+        return outs << Token::token_names[tok.type];
+    else
+        return outs << Token::token_names[tok.type] << "(" << tok.lexema << ")";
 }
+ostream& operator << (ostream& out, const Token* tok){
+    return out << *tok;
+}
+
 
 std::ostream& operator << ( std::ostream& outs, const Token & tok )
 {
