@@ -1,9 +1,39 @@
-
-#include "BX_Books.h"
+#include <iostream>
+#include <vector>
+#include <string.h>
+#include <fstream>
+#include <algorithm>
+#include <sstream>
+#include <string>
+#include <cmath>
 using namespace std;
 
-#define min_size_main 100 //cantidad minima de registros en el main para poder insertar en aux
+#define min_size_main 4 //cantidad minima de registros en el main para poder insertar en aux
 
+struct BX_Books {
+    char isbn[13];
+    char book_title[256];
+    char book_author[143];
+    unsigned short year_of_publication;
+    char publisher[134];
+
+    BX_Books(){}
+    BX_Books(string isbn, string book_title, string book_author, int year_of_publication, string publisher){
+        strncpy(this->isbn, isbn.c_str(), 13);
+        strncpy(this->book_title, book_title.c_str(), 256);
+        strncpy(this->book_author, book_author.c_str(), 143);
+        this->year_of_publication = year_of_publication;
+        strncpy(this->publisher, publisher.c_str(), 134);
+    }
+
+    void showData(){
+        cout << "ISBN: " << isbn << endl;
+        cout << "Book Title:" << book_title << endl;
+        cout << "Book Author: " << book_author << endl;
+        cout << "Year of Publication: " << year_of_publication << endl;
+        cout << "Publisher: " << publisher << endl;
+    }
+};
 
 template <class T>
 class SequentialFile {
@@ -367,3 +397,34 @@ void parse_line(const string& line, BX_Books& book) {
     strncpy(book.publisher, token.c_str(), sizeof(book.publisher) - 1);
     book.publisher[sizeof(book.publisher) - 1] = '\0'; // Ensure null-termination
 }
+int main(){
+    SequentialFile<BX_Books> * seq = new SequentialFile<BX_Books>();
+    
+    ifstream bx_books("../data/BX_Books.csv");
+    if (!bx_books) {throw runtime_error("No se pudo abrir el archivo");}
+    string line;
+    BX_Books book;
+
+    getline(bx_books, line); // saltar header
+    int i=2;
+    while (getline(bx_books, line) && i<= 3000) { // insertar cada linea del csv en sequential file
+        parse_line(line, book);  
+        seq->add(book);  
+        if(i%500 == 0){
+            cout <<"insertado: " <<i << endl;
+        }
+        i+=1;
+    }
+
+    vector<BX_Books> v;
+    v = seq->search(152012966);
+    for (auto i : v) i.showData();
+
+    v = seq->rangeSearch(2005018,60973129);
+    for (auto i : v) i.showData();
+
+    //seq->remove("2005018");
+   
+    delete seq;
+    return 0;
+};
