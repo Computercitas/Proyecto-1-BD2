@@ -10,6 +10,50 @@
 #include "Parser.h"
 using namespace std;
 
+class Table {
+public:
+    string name;        // Nombre de la tabla
+    string filePath;    // Ruta del archivo
+    string indexField;  // Campo del índice
+    string indexStructure; // Estructura de índice (sequential o AVL)
+    vector<vector<string>> data;
+
+    Table(const string& name, const string& filePath, const string& indexField, const string& indexStructure) : name(name), filePath(filePath), indexField(indexField), indexStructure(indexStructure) {}
+
+    void display() {
+        cout << "Tabla: " << name << endl;
+        cout << "Archivo: " << filePath << endl;
+        cout << "Campo de índice: " << indexField << endl;
+        cout << "Estructura de índice: " << indexStructure << endl;
+    }
+    void loadCSV() {
+        ifstream file(filePath);
+        if (!file.is_open()) {
+            cerr << "Error al abrir el archivo: " << filePath << endl;
+            return;
+        }
+
+        string line;
+        while (getline(file, line)) {
+            vector<string> row = parseCSVLine(line);
+            data.push_back(row);
+        }
+
+        file.close();
+        cout << "Datos del archivo CSV cargados exitosamente." << endl;
+    }
+
+private:
+    vector<string> parseCSVLine(const string& line) {
+        vector<string> result;
+        stringstream s_stream(line);
+        string column;
+        while (getline(s_stream, column, ',')) {
+            result.push_back(column);
+        }
+        return result;
+    }
+};
 
 
 const char* Token::token_names[25] = { "select", "*", 
@@ -61,6 +105,7 @@ Scanner::Scanner(const char* s):input(s),first(0),current(0) {
     reserved["sequential"] = Token::SEQUENTIAL;
     reserved["between"] = Token::BETWEEN;
     reserved["and"] = Token::AND;
+    reserved["structure"] = Token::STRUCTURE;
 }
 
 Scanner::~Scanner() { }
@@ -133,20 +178,58 @@ Parser::Parser(Scanner* sc):scanner(sc) {
   return;
 };
 
+void Parser::create() {
+    if (match(Token::TABLE)) {
+        if (match(Token::ID)) {
+            string tableName = previous->lexema;// Guarda el nombre de la tabla
+            if (match(Token::FROM)) {
+                if (match(Token::FILE)) {
+                    if (match(Token::STRING)) {
+                        string filePath = previous->lexema;// Guarda el archivo
+                        if (match(Token::USING)) {
+                            if (match(Token::INDEX)) {
+                                if (match(Token::STRUCTURE)) {
+                                    if (match(Token::LPAREN)) {
+                                        if (match(Token::ID)) {
+                                            string indexField = previous->lexema;// Guarda el campo del índice
+                                            if (match(Token::RPAREN)) {
+                                                if (match(Token::SEQUENTIAL) || match(Token::AVL)) {
+                                                    string indexStructure = (previous->type == Token::SEQUENTIAL) ? "Sequential File" : "AVL Tree";
+                                                    Table newTable(tableName, filePath, indexField, indexStructure);
+                                                    newTable.display();
+                                                    newTable.loadCSV();
+                                                    return;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    cout << "Error en la creación de la tabla." << endl;
+    exit(0);
+}
+
 bool Parser::parse() {
-  if (match(Token::CREATE)) {
+  advance();
+  if (current->type == Token::CREATE) {
     create();
     return true;
   }
-  if (match(Token::SELECT)) {
+  if (current->type == Token::SELECT) {
     select();
     return true;
   }
-  if (match(Token::INSERT)) {
+  if (current->type == Token::INSERT) {
     insert();
     return true;
   }
-  if (match(Token::DELETE)) {
+  if (current->type == Token::DELETE) {
     del();
     return true;
   }
