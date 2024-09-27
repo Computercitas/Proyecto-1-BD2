@@ -11,7 +11,7 @@ using namespace std;
 #define min_size_main 4 //cantidad minima de registros en el main para poder insertar en aux
 
 struct BX_Books {
-    char isbn[13];
+    char isbn[13] = {0};  // Zero-initialize the char array
     char book_title[256];
     char book_author[143];
     unsigned short year_of_publication;
@@ -32,6 +32,15 @@ struct BX_Books {
         cout << "Book Author: " << book_author << endl;
         cout << "Year of Publication: " << year_of_publication << endl;
         cout << "Publisher: " << publisher << endl;
+        cout << "------------------------------------" << endl;
+    }
+    void clearReg(){
+        string empty = "";
+        strncpy(this->isbn, empty.c_str(), 13);
+        strncpy(this->book_title, empty.c_str(), 256);
+        strncpy(this->book_author, empty.c_str(), 143);
+        this->year_of_publication = 0;
+        strncpy(this->publisher, empty.c_str(), 134);
     }
 };
 
@@ -57,10 +66,6 @@ public:
     }
 
     ~SequentialFile(){
-        //std::remove("sequential_datos_old.dat");
-        //std::remove("sequential_aux_old.dat");
-        //std::remove("sequential_datos.dat");
-        //std::remove("sequential_aux.dat");
         mainFilename = "";
         auxFilename = "";
     }
@@ -234,13 +239,7 @@ public:
         file.close();
     }
 
-    vector<T> search(int key) {
-        vector<T> result;
-        // considerar
-        // 1. Si el rango de busqueda esta en el main: Solo busco en el main
-        // 2. Si el rango de busqueda esta en el aux: Busco en el aux
-        // 3. Si el rango de busqueda esta en ambos:
-
+    T search(int key) {
         // Abro ambos archivos, main y aux
         ifstream mainFile(mainFilename, ios::binary);
         if (!mainFile.is_open()) {
@@ -250,7 +249,7 @@ public:
         if (!auxFile.is_open()) {
             throw runtime_error("No se pudo abrir el archivo auxiliar");
         }
-
+        bool found = false;
         T registro;
 
         // Busqueda en el main
@@ -261,7 +260,8 @@ public:
         for (int i = 0; i < sizeMain; i++) {
             mainFile.read((char*)&registro, sizeof(T));
             if (stoll(registro.isbn) == key) {
-                result.push_back(registro);
+                found = true;
+                return registro;
             }
         }
 
@@ -273,14 +273,20 @@ public:
         for (int i = 0; i < size; i++) {
             auxFile.read((char*)&registro, sizeof(T));
             if (stoll(registro.isbn) == key) {
-                result.push_back(registro);
+                found = true;
+                return registro;
             }
         }
 
         mainFile.close();
         auxFile.close();
-
-        return result;
+        //solo para imprimir en blanco caso no encuentra
+        if (!found){
+            cout << "No se encontro el key " << key <<endl;
+            registro.clearReg();
+        } 
+            
+        return registro;
     }
 
     vector<T> rangeSearch(int begin_id, int end_id) {
@@ -327,8 +333,8 @@ public:
     }
 
     void remove(string isbn) { //borrar todos los registros con un mismo isbn
-        remove(stoll(isbn), mainFilename);
-        remove(stoll(isbn), auxFilename);
+        remove(isbn, mainFilename);
+        remove(isbn, auxFilename);
     }
     void remove(string isbn, string filename) { //borrar todos los registros con un mismo isbn
         fstream file(filename, ios::in | ios::out | ios::binary);  
@@ -337,7 +343,8 @@ public:
             if (stoll(reg.isbn) == stoll(isbn)) {
                 int position = file.tellg() - sizeof(T); 
                 file.seekp(position, ios::beg); 
-                stoll(reg.isbn) = -1;  
+                string deleted = "-1";
+                strncpy(reg.isbn, deleted.c_str(), 13);
                 file.write((char*)&reg, sizeof(T));  
             }
         }
@@ -400,30 +407,35 @@ void parse_line(const string& line, BX_Books& book) {
 int main(){
     SequentialFile<BX_Books> * seq = new SequentialFile<BX_Books>();
     
-    ifstream bx_books("../data/BX_Books.csv");
+    ifstream bx_books("../data/clean_BX_books_50k.csv");
     if (!bx_books) {throw runtime_error("No se pudo abrir el archivo");}
     string line;
     BX_Books book;
 
     getline(bx_books, line); // saltar header
     int i=2;
-    while (getline(bx_books, line) && i<= 3000) { // insertar cada linea del csv en sequential file
+    while (getline(bx_books, line) && i<=20000) { // insertar cada linea del csv en sequential file
         parse_line(line, book);  
         seq->add(book);  
-        if(i%500 == 0){
+        if(i%1000 == 0){
             cout <<"insertado: " <<i << endl;
         }
         i+=1;
     }
 
+    book = seq->search(152012966);
+    book.showData();
+
     vector<BX_Books> v;
-    v = seq->search(152012966);
+    v = seq->rangeSearch(689820000,689821166);
     for (auto i : v) i.showData();
 
-    v = seq->rangeSearch(2005018,60973129);
-    for (auto i : v) i.showData();
-
-    //seq->remove("2005018");
+    seq->remove("2005018");
+    book = seq->search(2005018);
+    book.showData();
+    seq->remove("344244392");
+    book = seq->search(344244392);
+    book.showData();
    
     delete seq;
     return 0;
