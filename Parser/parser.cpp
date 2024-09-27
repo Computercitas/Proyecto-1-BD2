@@ -1,9 +1,9 @@
 #include "parser.hh"
 
-const char* Token::token_names[28] = { "LPAREN", "RPAREN", "ID", "SEMICOLON", "ASSIGN", "ERR", "END", 
+const char* Token::token_names[29] = { "LPAREN", "RPAREN", "ID", "SEMICOLON", "ASSIGN", "ERR", "END", 
         "COMILLAS", "COLON", "CREATE", "INSERT", "DELETE", "SELECT", 
         "FROM", "USING", "TABLE_ID", "VALUES", "WHERE", "BETWEEN", 
-        "TABLE", "FILE", "INTO", "AND", "ID", "INDEX", "SEQUENTIAL", "SLASH", "POINT"};
+        "TABLE", "FILE", "INTO", "AND", "ID", "INDEX", "SEQUENTIAL", "SLASH", "POINT", "ALL"};
 
 Token::Token(Type type) : type(type) {
     lexema = "";
@@ -64,6 +64,7 @@ Token* Scanner::nextToken() {
         switch (c) {
         case '(': token = new Token(Token::LPAREN); break;
         case ')': token = new Token(Token::RPAREN); break;
+        case '*': token = new Token(Token::ALL); break; 
         case ';': token = new Token(Token::SEMICOLON); break;
         case '=': token = new Token(Token::ASSIGN); break;
         case '\"': token = new Token(Token::COMILLAS); break;
@@ -174,47 +175,103 @@ Program* Parser::parseProgram() {
 
 Stm* Parser::parseStatement() {
     Stm* s = nullptr;
+
     if (match(Token::CREATE)) {
-      if (match(Token::TABLE)) {
-        if(match(Token::ID)){
-          string table_id = previous->lexema;
-            if(match(Token::FROM)){
-              if(match(Token::FILE)){
-                if(match(Token::COMILLAS)){
-                  string file_path;
-                  while (!match(Token::COMILLAS)){
-                    file_path += previous->lexema;
-                    advance();
-                  }
-                  if(match(Token::USING)){
-                    if(match(Token::INDEX)){
-                      if(match(Token::SEQUENTIAL)){
-                        if(match(Token::LPAREN)){
-                          if(match(Token::ID)){
-                            string KEY = previous -> lexema;
-                            if(match(Token::RPAREN)){
-                              cout<<"Se ha leido correctamente"<<endl;
-                          }
+        if (match(Token::TABLE)) {
+            if (match(Token::ID)) {
+                string table_id = previous->lexema;
+                if (match(Token::FROM)) {
+                    if (match(Token::FILE)) {
+                        if (match(Token::COMILLAS)) {
+                            string file_path;
+                            while (!match(Token::COMILLAS)) {
+                                file_path += previous->lexema;
+                                advance();
+                            }
+                            if (match(Token::USING)) {
+                                if (match(Token::INDEX)) {
+                                    if (match(Token::SEQUENTIAL)) {
+                                        if (match(Token::LPAREN)) {
+                                            if (match(Token::ID)) {
+                                                string key = previous->lexema;  // Debería ser "ISBN"
+                                                if (match(Token::RPAREN)) {
+                                                    return new CreateTableStatement(table_id, file_path, key);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
-                      }
-
                     }
-                  }
-
                 }
-              }
             }
         }
+    } else if (match(Token::SELECT)) {
+        if (match(Token::ALL)) { // Reconocer * en SELECT
+            if (match(Token::FROM)) {
+                if (match(Token::ID)) {
+                    string table_name = previous->lexema;
+                    if (match(Token::WHERE)) {
+                        if (match(Token::ID)) {
+                            string column = previous->lexema; // Debería ser "ISBN"
+                            if (match(Token::ASSIGN)) {
+                                if (match(Token::ID)) {
+                                    string value = previous->lexema; // Valor esperado para ISBN
+                                    return new SelectStatement(table_name, column, value);
+                                }
+                            } else if (match(Token::BETWEEN)) { // Búsqueda por rango con BETWEEN
+                                if (match(Token::ID)) {
+                                    string value1 = previous->lexema;
+                                    if (match(Token::AND)) {
+                                        if (match(Token::ID)) {
+                                            string value2 = previous->lexema;
+                                            return new SelectStatement(table_name, column, value1, true, value2);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
-    } else {
-    cout << "Se esperaba TABLE" << endl;
-    exit(0);
-}
-        } else {
-        cout << "No se encontró Statement" << endl;
-        exit(0);
+    } else if (match(Token::INSERT)) {
+        if (match(Token::INTO)) {
+            if (match(Token::ID)) {
+                string table_name = previous->lexema;
+                if (match(Token::VALUES)) {
+                    if (match(Token::LPAREN)) {
+                        vector<string> values;
+                        while (!match(Token::RPAREN)) {
+                            values.push_back(previous->lexema);
+                            advance();
+                        }
+                        return new InsertStatement(table_name, values);
+                    }
+                }
+            }
+        }
+    } else if (match(Token::DELETE)) {
+        if (match(Token::FROM)) {
+            if (match(Token::ID)) {
+                string table_name = previous->lexema;
+                if (match(Token::WHERE)) {
+                    if (match(Token::ID)) {
+                        string column = previous->lexema; // Debería ser "ISBN"
+                        if (match(Token::ASSIGN)) {
+                            if (match(Token::ID)) {
+                                string value = previous->lexema;
+                                return new DeleteStatement(table_name, column, value);
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
-    return s;
+
+    return nullptr; // Si no reconoce el comando
 }
 
 /*

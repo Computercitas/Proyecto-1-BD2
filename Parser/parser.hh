@@ -1,3 +1,5 @@
+#ifndef PARSER_H
+#define PARSER_H
 #include <sstream>
 #include <iostream>
 #include <stdlib.h>
@@ -17,9 +19,9 @@ public:
         LPAREN = 0, RPAREN, KEY, SEMICOLON, ASSIGN, ERR, END, 
         COMILLAS, COLON, CREATE, INSERT, DELETE, SELECT, 
         FROM, USING, TABLE_ID, VALUES, WHERE, BETWEEN, 
-        TABLE, FILE, INTO, AND, ID, INDEX, SEQUENTIAL,SLASH,POINT
+        TABLE, FILE, INTO, AND, ID, INDEX, SEQUENTIAL,SLASH,POINT, ALL
     };
-    static const char* token_names[28];
+    static const char* token_names[29];
     Type type;
     string lexema;
 
@@ -65,3 +67,6 @@ public:
     Parser(Scanner* scanner);
     Program* parse(); // Cambiado de std::unique_ptr<Program> a Program*
 };
+
+
+#endif // PARSER_H

@@ -1,6 +1,7 @@
 #include "gramatica.hh"
 
 
+
 IdExp::IdExp(std::string id) : id(std::move(id)) {}
 
 IdExp::~IdExp() {}
@@ -17,13 +18,17 @@ string ParenthExp::accept(ImpVisitor* v) {
     return v->visit(this);
 }
 
+
+Program::Program() : slist() {}
+
+/*
 Program::Program() : slist() {}
 
 Program::~Program() {
     for (auto s : slist) {
         delete s;
     }
-}
+}*/
 
 void Program::add(Stm* s) {
     slist.push_back(s);
@@ -32,6 +37,27 @@ void Program::add(Stm* s) {
 string Program::accept(ImpVisitor* v) {
     return v->visit(this);
 }
+
+
+//----------------------------------------------------------------
+string CreateTableStatement::accept(ImpVisitor* v) {
+    return v->visit(this);
+}
+
+string InsertStatement::accept(ImpVisitor* v) {
+    return v->visit(this);
+}
+
+string SelectStatement::accept(ImpVisitor* v) {
+    return v->visit(this);
+}
+
+string DeleteStatement::accept(ImpVisitor* v) {
+    return v->visit(this);
+}
+
+//----------------------------------------------------------------
+
 
 string ConcreteVisitor::visit(IdExp* e) {
     return "Visiting IdExp: " + e->getId();
