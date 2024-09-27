@@ -1,29 +1,45 @@
 #include <iostream>
-#include <fstream>
-#include <sstream>
 #include <vector>
-#include <cstring>
+#include <string.h>
+#include <fstream>
+#include <algorithm>
+#include <sstream>
+#include <string>
+#include <cmath>
 using namespace std;
 
+
 struct Record {
-    int code;
-    char nombre[12];
-    char apellido[12];
-    int ciclo;
 
     long left = -1;
     long right = -1;
     int height = 1;
 
-    void showData() const {
-        cout << "\nCodigo: " << code;
-        cout << "\nNombre: " << nombre;
-        cout << "\nApellido: " << apellido;
-        cout << "\nCiclo : " << ciclo << "\n";
+    unsigned long long code;
+    char book_title[256];
+    char book_author[143];
+    unsigned short year_of_publication;
+    char publisher[134];
+
+    Record(){};
+    Record(string isbn, string book_title, string book_author, int year_of_publication, string publisher){
+        this->code = stoull(isbn);
+        strncpy(this->book_title, book_title.c_str(), 256);
+        strncpy(this->book_author, book_author.c_str(), 143);
+        this->year_of_publication = year_of_publication;
     }
 
-    bool operator==(const Record& other) const {
-        return code == other.code && strcmp(nombre, other.nombre) == 0 && strcmp(apellido, other.apellido) == 0 && ciclo == other.ciclo;
+    void showData() const {
+        cout << "ISBN: " << code << endl;
+        cout << "Book Title: " << book_title << endl;
+        cout << "Book Author: " << book_author << endl;
+        cout << "Year of Publication: " << year_of_publication << endl;
+        cout << "Publisher: " << publisher << endl;
+        cout << "----------------------------------" << endl;
+    }
+
+    void showNode(){
+        cout << code << "\t" << left << "\t" << right << "\t" << height << endl;
     }
 };
 
@@ -34,9 +50,14 @@ private:
     long pos_root;
 
 public:
-    AVLFile(string filename) : filename(filename), pos_root(-1) {
-        ofstream createFile(this->filename, ios::binary | ios::app);
-        createFile.close();
+    AVLFile(string filename, bool create) { //especificar si es para crear archivo no
+        if (create){
+            ofstream createFile(this->filename, ios::binary | ios::app);
+            createFile.close();
+        }else{
+            this->filename = filename; //abrir archivo .dat con registros ya insertados
+        }
+        this->pos_root = -1;
     }
 
     Record find(TK key) {
@@ -195,7 +216,14 @@ private:
     Record find(long pos_node, TK key) {
         if (pos_node == -1) {
             Record emptyRecord;
-            emptyRecord.code = -1;
+            string empty_string = "";
+            cout << "No se encontro registro con key: " << key << endl;
+            //solo para imprimirlo como "vacio"
+            emptyRecord.code = 0;
+            strncpy(emptyRecord.book_author, empty_string.c_str(),sizeof(emptyRecord.book_author));
+            strncpy(emptyRecord.book_title, empty_string.c_str(),sizeof(emptyRecord.book_title));     
+            strncpy(emptyRecord.publisher, empty_string.c_str(),sizeof(emptyRecord.publisher));   
+            emptyRecord.year_of_publication = 0; 
             return emptyRecord;
         }
 
@@ -264,6 +292,7 @@ private:
     //----------------------------------------------------------------
 
     long remove(long pos_node, TK key, bool &removed) {
+
         if (pos_node == -1) {
             removed = false;
             return pos_node;
@@ -292,9 +321,10 @@ private:
                 Record tempRecord = readRecord(temp);
 
                 current.code = tempRecord.code;
-                strncpy(current.nombre, tempRecord.nombre, sizeof(tempRecord.nombre));
-                strncpy(current.apellido, tempRecord.apellido, sizeof(tempRecord.apellido));
-                current.ciclo = tempRecord.ciclo;
+                strncpy(current.book_title, tempRecord.book_title, sizeof(tempRecord.book_title));
+                strncpy(current.book_author, tempRecord.book_author, sizeof(tempRecord.book_author));
+                current.year_of_publication = tempRecord.year_of_publication;
+                strncpy(current.publisher, tempRecord.publisher, sizeof(tempRecord.publisher));
 
                 current.right = remove(current.right, tempRecord.code, removed);
             }
@@ -343,207 +373,112 @@ private:
     }
 };
 
+void parse_line(const string& line, Record& book) {
+    stringstream ss(line);
+    string token;
 
-
-vector<Record> leerCSV(const string& filename) {
-    ifstream file(filename);
-    vector<Record> records;
-    string line;
-
-    if (!file.is_open()) {
-        cerr << "No se pudo abrir el archivo.\n";
-        return records;
+    // Parse ISBN
+    getline(ss, token, ';');
+    try {
+        book.code = stoull(token);  // Convert to long
+    } catch (const invalid_argument& e) {
+        throw runtime_error("Invalid ISBN: " + token);
+    } catch (const out_of_range& e) {
+        throw runtime_error("ISBN out of range: " + token);
     }
+    book.code = stoull(token);
 
-    while (getline(file, line)) {
-        if (line.empty()) continue;  // Ignorar líneas vacías
+    // Parse Book Title
+    getline(ss, token, ';');
+    strncpy(book.book_title, token.c_str(), sizeof(book.book_title) - 1);
+    book.book_title[sizeof(book.book_title) - 1] = '\0'; // Ensure null-termination
 
-        stringstream ss(line);
-        string token;
-        Record record;
+    // Parse Book Author
+    getline(ss, token, ';');
+    strncpy(book.book_author, token.c_str(), sizeof(book.book_author) - 1);
+    book.book_author[sizeof(book.book_author) - 1] = '\0'; // Ensure null-termination
 
-        // Leer el código
-        getline(ss, token, ',');
-        try {
-            record.code = stoi(token);
-        } catch (const invalid_argument& e) {
-            cerr << "Error al convertir el código: " << token << endl;
-            continue;  // Saltar esta línea si hay un error
-        }
-
-        // Leer el nombre
-        getline(ss, token, ',');
-        strncpy(record.nombre, token.c_str(), sizeof(record.nombre));
-        record.nombre[sizeof(record.nombre) - 1] = '\0';  // Asegurar el null-termination
-
-        // Leer el apellido
-        getline(ss, token, ',');
-        strncpy(record.apellido, token.c_str(), sizeof(record.apellido));
-        record.apellido[sizeof(record.apellido) - 1] = '\0';  // Asegurar el null-termination
-
-        // Leer el ciclo
-        getline(ss, token, ',');
-        try {
-            record.ciclo = stoi(token);
-        } catch (const invalid_argument& e) {
-            cerr << "Error al convertir el ciclo: " << token << endl;
-            continue;  // Saltar esta línea si hay un error
-        }
-
-        records.push_back(record);
+    // Parse Year of Publication
+    getline(ss, token, ';');
+    if (token.empty() || !all_of(token.begin(), token.end(), ::isdigit)) {
+        throw runtime_error("Invalid year of publication: " + token);
     }
+    book.year_of_publication = static_cast<unsigned short>(stoi(token));
 
+    // Parse Publisher
+    getline(ss, token, ';');
+    strncpy(book.publisher, token.c_str(), sizeof(book.publisher) - 1);
+    book.publisher[sizeof(book.publisher) - 1] = '\0'; // Ensure null-termination
+}
+
+void print_nodes(string filename) {
+    ifstream file(filename, ios::binary);
+    Record record;
+    int i=0;
+    cout << "code\tleft\tright\theight" << endl;
+    while (file.read((char*)&record, sizeof(Record)) && i<=20) {
+        record.showNode();
+        i++;
+    }
     file.close();
-    return records;
 }
-//
 
-void menu() { cout << "\nSeleccione una opción:\n";
-    cout << "1. Insertar un registro\n";
-    cout << "2. Buscar un registro\n";
-    cout << "3. Eliminar un registro\n";
-    cout << "4. Mostrar todos los registros en orden\n";
-    cout << "5. Buscar registros por clave\n";
-    cout << "6. Buscar registros por rango\n"; 
-    cout << "7. Agregar un registro al archivo\n"; 
-    cout << "8. Salir\n"; }
-
-void testAVL() {
-    string filename = "avl_data.dat"; 
-    AVLFile<int> avlFile(filename);
-
-    // Leer registros del archivo CSV
-    vector<Record> records = leerCSV("datos.csv");
-
-    // Insertar registros en el árbol AVL
-    for (const auto& record : records) {
-        avlFile.insert(record);
-    }
-
-    int option;
-    do {
-    menu();
-    cin >> option;
-
-    switch (option) {
-
-        case 1: {
-            Record record;
-            cout << "Ingrese código: ";
-            cin >> record.code;
-                
-            // Verificar si el código ya está registrado
-            Record existingRecord = avlFile.find(record.code);
-            if (existingRecord.code != -1) {
-                cout << "Código ya registrado. No se puede agregar nuevamente\n";
-            } else {
-                cout << "Ingrese nombre: ";
-                cin >> record.nombre;
-                cout << "Ingrese apellido: ";
-                cin >> record.apellido;
-                cout << "Ingrese ciclo: ";
-                cin >> record.ciclo;
-                avlFile.insert(record);
-                cout << "Registro insertado.\n";
-            }
-            break;
-        }
-        case 2: {
-            int code;
-            cout << "Ingrese el código del registro a buscar: ";
-            cin >> code;
-            vector<Record> results = avlFile.search(code);
-            if (!results.empty()) {
-                for (const auto& result : results) {
-                    result.showData();
-                }
-            } else {
-                cout << "Registro no encontrado.\n";
-            }
-            break;
-        }
-        case 3: {
-            int code;
-            cout << "Ingrese el código del registro a eliminar: ";
-            cin >> code;
-            bool removed = avlFile.remove(code);
-            if (removed) {
-                cout << "Registro eliminado.\n";
-            } else {
-                cout << "Registro no encontrado.\n";
-            }
-            break;
-        }
-        case 4: {
-            cout << "Registros en orden:\n";
-            vector<Record> avlRecords = avlFile.inorder();
-            for (const auto& record : avlRecords) {
-                record.showData();
-            }
-            break;
-        }
-        case 5: {
-            int code;
-            cout << "Ingrese el código del registro a buscar: ";
-            cin >> code;
-            vector<Record> results = avlFile.search(code);
-            if (!results.empty()) {
-                for (const auto& result : results) {
-                    result.showData();
-                }
-            } else {
-                cout << "Registro no encontrado.\n";
-            }
-            break;
-        }
-        case 6: {
-            int start, end;
-            cout << "Ingrese el código de inicio del rango: ";
-            cin >> start;
-            cout << "Ingrese el código de fin del rango: ";
-            cin >> end;
-            vector<Record> results = avlFile.rangeSearch(start, end);
-            if (!results.empty()) {
-                for (const auto& result : results) {
-                    result.showData();
-                }
-            } else {
-                cout << "No se encontraron registros en el rango dado.\n";
-            }
-            break;
-        }
-        case 7: {
-            Record record;
-            cout << "Ingrese código: ";
-            cin >> record.code;
-                
-            // Verificar si el código ya está registrado
-            Record existingRecord = avlFile.find(record.code);
-            if (existingRecord.code != -1) {
-                cout << "Código ya registrado. No se puede agregar nuevamente\n";
-            } else {
-                cout << "Ingrese nombre: ";
-                cin >> record.nombre;
-                cout << "Ingrese apellido: ";
-                cin >> record.apellido;
-                cout << "Ingrese ciclo: ";
-                cin >> record.ciclo;
-                avlFile.add(record);
-                cout << "Registro agregado al archivo.\n";
-            }
-            break;
-        }
-        case 8:
-            cout << "Saliendo...\n";
-            break;
-        default:
-            cout << "Opción inválida. Inténtelo de nuevo.\n";
-    }
-} while (option != 8);
-
-}
 
 int main() {
-    testAVL(); 
+    string filename = "avl_data.dat";
+    AVLFile<int> avlFile(filename, true);
+    Record rec;
+    vector<Record> v;
+    ifstream bx_books("C:/Users/davie/VSCode_projects/DataFusionDB/data/clean_BX_Books_50k.csv");
+    if (!bx_books) {throw runtime_error("No se pudo abrir el archivo");}
+    string line;
+    Record book;
+
+    getline(bx_books, line); // saltar header
+
+    int i=1;
+    unsigned long max_code = 0;
+    while (getline(bx_books, line)) { // insertar cada linea del csv en sequential file
+        parse_line(line, book);  
+        //cout << "Max code: " << max_code << endl;
+        //book.showData(); cout << endl;
+        if(book.code > max_code) max_code = book.code;
+        avlFile.insert(book); 
+        if (i%100 == 0) cout << "Insertado: " << i << endl;
+        i++;
+    }
+
+    //print_nodes(filename);
+
+    //find key invalido
+    //rec = avlFile.find(123124);
+    //rec.showData();
+
+    //find key valido
+    //rec = avlFile.find(3453209419);
+    //rec.showData();
+
+    //search key valido
+    //v = avlFile.search(399135790);
+    //for (auto elem : v) elem.showData();
+
+    //search key invalido
+    //v = avlFile.search(1231234);
+    //for (auto elem : v) elem.showData();
+
+    //range search donde ningun key en el rango es valido
+    //v = avlFile.rangeSearch(0,10);
+    //for (auto elem : v) elem.showData();
+
+    //range search con keys validos en el rango
+    //v = avlFile.rangeSearch(2005018,80652121);
+    //for (auto elem : v) elem.showData();
+
+
+        /*
+    //AVLFile<int> avlFile("avl_data.dat");
+    */                                  
+
+    delete &avlFile;
     return 0; 
 }
