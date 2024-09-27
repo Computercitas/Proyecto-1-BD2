@@ -11,20 +11,13 @@ using namespace std;
 
 class Token {
 public:
-  enum Type { SELECT, ALL, 
-                FROM, TABLE, 
-                WHERE, CREATE, 
-                INSERT, DELETE, 
-                VALUES, INTO, 
-                FILE, USING, 
-                INDEX, BPLUSTREE,
-                AVL, SEQUENTIAL,
-                BETWEEN, AND,
-                STRING, NUMBER, 
-                EQUAL, ID,
-                LPAREN, RPAREN, VALUEPAREN,
-                END, ERR };
-  static const char* token_names[25];
+  enum Type { CREATE, TABLE, FILE, USING, INDEX, BPLUS, AVL, SEQUENTIAL, 
+              SELECT, ALL, FROM, WHERE, EQUAL, ID, STRING, NUMBER, 
+              BETWEEN, AND, INSERT, INTO, VALUES, LPAREN, RPAREN, 
+              DELETE, END, ERR, SEMICOLON, COLON, FILENAME, VALUEPAREN, 
+              TRUE, FALSE };
+
+  static const char* token_names[32]; 
   Type type;
   string lexema;
   Token(Type);
@@ -37,6 +30,7 @@ public:
   Scanner(const char* in_s);
   Token* nextToken();
   ~Scanner();  
+  
 private:
   string input;
   int first, current;

@@ -4,56 +4,12 @@
 #include <iostream>
 #include <stdlib.h>
 #include <cstring>
+#include <vector>
 #include <string>
 #include <fstream>
 #include <unordered_map>
 #include "Parser.h"
 using namespace std;
-
-class Table {
-public:
-    string name;        // Nombre de la tabla
-    string filePath;    // Ruta del archivo
-    string indexField;  // Campo del índice
-    string indexStructure; // Estructura de índice (sequential o AVL)
-    vector<vector<string>> data;
-
-    Table(const string& name, const string& filePath, const string& indexField, const string& indexStructure) : name(name), filePath(filePath), indexField(indexField), indexStructure(indexStructure) {}
-
-    void display() {
-        cout << "Tabla: " << name << endl;
-        cout << "Archivo: " << filePath << endl;
-        cout << "Campo de índice: " << indexField << endl;
-        cout << "Estructura de índice: " << indexStructure << endl;
-    }
-    void loadCSV() {
-        ifstream file(filePath);
-        if (!file.is_open()) {
-            cerr << "Error al abrir el archivo: " << filePath << endl;
-            return;
-        }
-
-        string line;
-        while (getline(file, line)) {
-            vector<string> row = parseCSVLine(line);
-            data.push_back(row);
-        }
-
-        file.close();
-        cout << "Datos del archivo CSV cargados exitosamente." << endl;
-    }
-
-private:
-    vector<string> parseCSVLine(const string& line) {
-        vector<string> result;
-        stringstream s_stream(line);
-        string column;
-        while (getline(s_stream, column, ',')) {
-            result.push_back(column);
-        }
-        return result;
-    }
-};
 
 
 //----------Token:
@@ -103,6 +59,68 @@ std::ostream& operator << ( std::ostream& outs, const Token & tok )
 std::ostream& operator << ( std::ostream& outs, const Token* tok ) {
   return outs << *tok;
 }
+
+
+class Table {
+public:
+    string name;        // Nombre de la tabla
+    string filePath;    // Ruta del archivo
+    string indexField;  // Campo del índice
+    string indexStructure; // Estructura de índice (sequential o AVL)
+    vector<vector<string>> data;
+
+    Table(const string& name, const string& filePath, const string& indexField, const string& indexStructure) : name(name), filePath(filePath), indexField(indexField), indexStructure(indexStructure) {}
+
+    void display() {
+        cout << "Tabla: " << name << endl;
+        cout << "Archivo: " << filePath << endl;
+        cout << "Campo de índice: " << indexField << endl;
+        cout << "Estructura de índice: " << indexStructure << endl;
+    }
+    void loadCSV() {
+        ifstream file(filePath);
+        if (!file.is_open()) {
+            cerr << "Error al abrir el archivo: " << filePath << endl;
+            return;
+        }
+
+        string line;
+        size_t lineCount = 0;
+        while (getline(file, line)) {
+            lineCount++;
+            if (line.empty()) {
+                cerr << "Línea vacía en el archivo, línea " << lineCount << endl;
+                continue; // Ignorar líneas vacías
+            }
+            vector<string> row = parseCSVLine(line);
+            if (row.empty()) {
+                cerr << "Error al procesar la línea " << lineCount << " en el archivo." << endl;
+                continue;
+            }
+            data.push_back(row);
+        }
+
+        file.close();
+        cout << "Datos del archivo CSV cargados exitosamente." << endl;
+    }
+
+
+private:
+    vector<string> parseCSVLine(const string& line) {
+        vector<string> result;
+        stringstream s_stream(line);
+        string column;
+        while (getline(s_stream, column, ',')) {
+            if (!column.empty()) { // Evitar añadir columnas vacías innecesariamente
+                result.push_back(column);
+            }
+        }
+        return result;
+    }
+
+};
+
+
 
 Scanner::Scanner(const char* s):input(s),first(0),current(0) {
     reserved["create"] = Token::CREATE;
@@ -266,18 +284,17 @@ void Parser::create() {
                         string filePath = previous->lexema;// Guarda el archivo
                         if (match(Token::USING)) {
                             if (match(Token::INDEX)) {
-                                if (match(Token::STRUCTURE)) {
-                                    if (match(Token::LPAREN)) {
+                                if (match(Token::SEQUENTIAL) || match(Token::AVL)) {
+                                    string indexStructure = (previous->type == Token::SEQUENTIAL) ? "Sequential File" : "AVL Tree";
+                                    if (match(Token::LPARENT)) {
                                         if (match(Token::ID)) {
                                             string indexField = previous->lexema;// Guarda el campo del índice
-                                            if (match(Token::RPAREN)) {
-                                                if (match(Token::SEQUENTIAL) || match(Token::AVL)) {
-                                                    string indexStructure = (previous->type == Token::SEQUENTIAL) ? "Sequential File" : "AVL Tree";
+                                            if (match(Token::RPARENT)) {
                                                     Table newTable(tableName, filePath, indexField, indexStructure);
                                                     newTable.display();
                                                     newTable.loadCSV();
                                                     return;
-                                                }
+                                                
                                             }
                                         }
                                     }
