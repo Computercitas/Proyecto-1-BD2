@@ -105,25 +105,86 @@ std::ostream& operator << ( std::ostream& outs, const Token* tok ) {
 }
 
 Scanner::Scanner(const char* s):input(s),first(0),current(0) {
-    reserved["select"] = Token::SELECT;
-    reserved["from"] = Token::FROM;
-    reserved["table"] = Token::TABLE;
-    reserved["where"] = Token::WHERE;
     reserved["create"] = Token::CREATE;
-    reserved["insert"] = Token::INSERT;
-    reserved["delete"] = Token::DELETE;
-    reserved["values"] = Token::VALUES;
-    reserved["into"] = Token::INTO;
+    reserved["table"] = Token::TABLE;
     reserved["file"] = Token::FILE;
     reserved["using"] = Token::USING;
     reserved["index"] = Token::INDEX;
-    reserved["bplustree"] = Token::BPLUSTREE;
+    reserved["bplus"] = Token::BPLUS;
     reserved["avl"] = Token::AVL;
     reserved["sequential"] = Token::SEQUENTIAL;
+    reserved["select"] = Token::SELECT;
+    reserved["from"] = Token::FROM;
+    reserved["where"] = Token::WHERE;
+    reserved["insert"] = Token::INSERT;
+    reserved["into"] = Token::INTO;
+    reserved["values"] = Token::VALUES;
+    reserved["delete"] = Token::DELETE;
     reserved["between"] = Token::BETWEEN;
     reserved["and"] = Token::AND;
-    reserved["structure"] = Token::STRUCTURE;
+    reserved["true"] = Token::TRUE;
+    reserved["false"] = Token::FALSE;
 }
+
+
+
+Token* Scanner::nextToken() {
+    // Ignorar espacios en blanco y tabulaciones
+    while (current < input.size() && (isspace(input[current]) || input[current] == '\t')) {
+        current++;
+    }
+
+    if (current >= input.size()) {
+        return new Token(Token::END);  // Si llegamos al final del input
+    }
+
+    startLexema(); // Comenzar a registrar el lexema desde el primer carácter relevante
+    char c = nextChar();
+
+    // Manejar identificadores y palabras clave (empiezan con una letra)
+    if (isalpha(c)) {
+        while (isalnum(input[current])) {
+            nextChar();
+        }
+        string lexema = getLexema();
+        Token::Type tokenType = checkReserved(lexema);
+        return new Token(tokenType != Token::ERR ? tokenType : Token::ID, lexema);
+    }
+
+    // Manejar números
+    if (isdigit(c)) {
+        while (isdigit(input[current])) {
+            nextChar();
+        }
+        return new Token(Token::NUMBER, getLexema());
+    }
+
+    // Manejar cadenas entre comillas dobles
+    if (c == '\"') {
+        while (current < input.size() && input[current] != '\"') {
+            nextChar();
+        }
+        nextChar(); // Consumir la comilla de cierre
+        string lexema = input.substr(first + 1, current - first - 2); // Remover comillas
+        return new Token(Token::STRING, lexema);
+    }
+
+    // Manejar paréntesis, operadores y símbolos específicos
+    switch (c) {
+        case '(': return new Token(Token::LPARENT);
+        case ')': return new Token(Token::RPARENT);
+        case '=': return new Token(Token::EQUAL);
+        case ',': return new Token(Token::COLON);
+        case ';': return new Token(Token::SEMICOLON);
+        default: break;
+    }
+
+    // Si llega un carácter no reconocido, se devuelve un error
+    return new Token(Token::ERR, getLexema());
+}
+
+
+//-------------------Scanner:
 
 Scanner::~Scanner() { }
 
