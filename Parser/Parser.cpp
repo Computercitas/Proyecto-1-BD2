@@ -12,24 +12,6 @@
 using namespace std;
 
 
-//----------Token:
-class Token {
-public:
-  enum Type { CREATE, TABLE, FILE, USING, INDEX, BPLUS, AVL, SEQUENTIAL, SELECT, ALL,
-  FROM, WHERE, EQUAL, ID, STRING, NUMBER, BETWEEN, AND, INSERT, INTO,
-  VALUES, LPARENT, RPARENT, DELETE, END, ERR, SEMICOLON, COLON, FILENAME, VALUEPAREN,
-  TRUE, FALSE};
-
-  static const char* token_names[32]; 
-  Type type;
-  string lexema;
-  Token(Type type):type(type) { lexema = ""; }
-  Token(Type, char c);
-  Token(Type type, const string source):type(type) {
-    lexema = source;
-  }
-};
-
 const char* Token::token_names[32] = {
   "create", "table", "file", "using", "index", "bplus", "avl", "sequential", "select", "*",
   "from", "where", "=", "ID", "string", "number", "between", "and", "insert", "into",
@@ -60,7 +42,7 @@ std::ostream& operator << ( std::ostream& outs, const Token* tok ) {
   return outs << *tok;
 }
 
-
+//---------------------------Table:
 class Table {
 public:
     string name;        // Nombre de la tabla
