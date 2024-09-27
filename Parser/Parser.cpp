@@ -135,19 +135,19 @@ Parser::Parser(Scanner* sc):scanner(sc) {
 
 bool Parser::parse() {
   if (match(Token::CREATE)) {
-    pcreate_table();
+    create();
     return true;
   }
   if (match(Token::SELECT)) {
-    pselect();
+    select();
     return true;
   }
   if (match(Token::INSERT)) {
-    pinsert();
+    insert();
     return true;
   }
   if (match(Token::DELETE)) {
-    pdelete();
+    del();
     return true;
   }
   cout << "No ha introducido un comando valido"<<endl;
