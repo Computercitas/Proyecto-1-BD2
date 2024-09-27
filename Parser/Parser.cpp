@@ -285,7 +285,7 @@ bool Parser::parse() {
   if (current->type == Token::CREATE) {
     create();
     return true;
-  }
+  }/*
   if (current->type == Token::SELECT) {
     select();
     return true;
@@ -297,7 +297,7 @@ bool Parser::parse() {
   if (current->type == Token::DELETE) {
     del();
     return true;
-  }
+  }*/
   cout << "No ha introducido un comando valido"<<endl;
   exit(0);
 }
