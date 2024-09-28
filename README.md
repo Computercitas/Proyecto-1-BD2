@@ -40,29 +40,20 @@ Indexar archivos para poder minimizar los accesos a la memoria principal y poder
 ## Técnicas Utilizadas
 
 ### AVL
-El uso de AVL proporciona una mayor eficiencia en la búsqueda y gestión de registros individuales debido a su naturaleza completamente dinámica. Esto lo convierte en una opción ideal para aplicaciones que requieren búsquedas frecuentes y eficientes de registros. Además, es especialmente útil para aplicaciones que necesitan realizar búsquedas por rangos de valores en la clave de índice.
+Utiliza un árbol binario con rotaciones, donde los nodos son las llaves de los registros.
 
 #### Inserción
-El proceso de inserción en un archivo AVL comienza verificando si el árbol está vacío. Si es así, se establece la raíz y se escribe el registro en la posición inicial del archivo. Si el árbol no está vacío, se lee el nodo actual y se comparan las claves. Si la clave del nuevo registro es menor, se desciende por el subárbol izquierdo; si es mayor, por el subárbol derecho. El nuevo nodo se inserta como una hoja, y durante este proceso, se verifica la altura del árbol para determinar si es necesario realizar rotaciones. Finalmente, se llama a la función de balanceo para mantener el árbol equilibrado, asegurando así la eficiencia en las operaciones de búsqueda.
+Vamos comparando los nodos con la llave que queremos insertar, bajamos por la izquierda si es menor y por la derecha si es mayor y insertamos el nodo como hoja, siempre verificando la altura para ver si tenemos que realizar rotaciones o no.
+| Cantidad de elementos | Tiempo de ejecución    |                                                                               
+|-----------------------|------------------------|
+|     10k               | 126ms                  |
+|     20k               | 290ms                  |
+|     50k               | 600ms                  |
 
 #### Búsqueda
-El proceso de búsqueda en un archivo AVL comienza verificando si el nodo actual es nulo. Si no lo es, se lee el registro correspondiente desde el archivo. Luego, se compara la clave buscada con la clave del nodo actual. Si la clave buscada es menor, la búsqueda continúa recursivamente en el subárbol izquierdo. Si es mayor, se procede con el subárbol derecho. Si la clave coincide, se añade el registro al vector de resultados y se continúa la búsqueda en ambos subárboles para encontrar posibles duplicados. Este método asegura que se recorran todos los nodos relevantes, manteniendo la eficiencia del árbol AVL en las operaciones de búsqueda.
-
-#### Búsqueda por rango
-
-La búsqueda por rango en un archivo AVL permite encontrar todos los registros cuyas claves se encuentran dentro de un rango específico. El proceso comienza verificando si el nodo actual es nulo. Si no lo es, se lee el registro correspondiente desde el archivo. Luego, se compara la clave del nodo con los límites del rango (beginKey y endKey). Si la clave del nodo es mayor o igual a beginKey, se realiza una búsqueda recursiva en el subárbol izquierdo. Si la clave del nodo está dentro del rango, se añade el registro al vector de resultados. Si la clave del nodo es menor o igual a endKey, se realiza una búsqueda recursiva en el subárbol derecho. Este método asegura que todos los nodos relevantes dentro del rango especificado sean encontrados y añadidos a los resultados, manteniendo la eficiencia característica de los árboles AVL en las operaciones de búsqueda.
-
+Búsqueda binaria, bajamos por los nodos.
 
 #### Remove
-
-El proceso de eliminación en un archivo AVL, sigue varios pasos para asegurar que el árbol se mantenga balanceado después de la eliminación de un nodo. Primero, se verifica si el nodo actual es nulo; si es así, la función retorna sin hacer nada. Luego, se lee el nodo actual y se compara la clave del nodo a eliminar con la clave del nodo actual. Si la clave es menor, se llama recursivamente a la función de eliminación en el subárbol izquierdo; si es mayor, en el subárbol derecho. Si la clave coincide, se manejan tres casos:
-
-1. *Nodo Hoja*: Si el nodo es una hoja (sin hijos), se elimina directamente y se actualiza el puntero del nodo padre.
-Nodo con un Hijo: Si el nodo tiene solo un hijo, se reemplaza el nodo por su hijo.
-
-2. *Nodo con Dos Hijos*: Si el nodo tiene dos hijos, se encuentra el sucesor en el subárbol derecho (el nodo con el valor mínimo), se reemplaza el nodo actual por el sucesor y se elimina el sucesor del subárbol derecho.
-
-Después de eliminar el nodo, se llama a la función de balanceo para asegurar que el árbol AVL se mantenga equilibrado, lo que es crucial para mantener la eficiencia en las operaciones de búsqueda y otras operaciones del árbol.
 
 
 | Función            | Descripción                                                                                           | Complejidad                       |
