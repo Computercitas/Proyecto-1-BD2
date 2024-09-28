@@ -65,11 +65,11 @@ El proceso de eliminación en un archivo AVL, sigue varios pasos para asegurar q
 
 Ilustración:
 
-![avlremove](/images/avlremove1.png "avlremove")
+![avlremove1](/images/avlremove1.png "avlremove1")
 
-![avlremove](/images/avlremove2.png "avlremove")
+![avlremove2](/images/avlremove2.png "avlremove2")
 
-![avlremove](/images/avlremove3.png "avlremove")
+![avlremove3](/images/avlremove3.png "avlremove3")
 
 #### Inserción
 Vamos comparando los nodos con la llave que queremos insertar, bajamos por la izquierda si es menor y por la derecha si es mayor y insertamos el nodo como hoja, siempre verificando la altura para ver si tenemos que realizar rotaciones o no.
