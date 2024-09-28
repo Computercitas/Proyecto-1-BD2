@@ -250,9 +250,10 @@ Stm* Parser::parseStatement() {
                         if (match(Token::ID)) {
                             string column = previous->lexema;
                             if (match(Token::ASSIGN)) {
-                                if (match(Token::ID)) {
+                                if (match(Token::NUM)) {
                                     string value = previous->lexema;
                                     if (match(Token::SEMICOLON)) {
+                                        cout<< "Se logro seleccionar"<<endl;
                                         return new SelectStatement(table_name, column, value);
                                     } else {
                                         cout << "Error: Se esperaba un ';' después de SELECT." << endl;
@@ -267,6 +268,7 @@ Stm* Parser::parseStatement() {
                                         if(match(Token::NUM)){
                                             long unsigned num2 = stoul(previous -> lexema);
                                             cout<<"Busque de rango desde "<<num1<<" hasta "<<num2<<endl;
+                                            return nullptr;
                                             
                                         }
 
@@ -277,6 +279,7 @@ Stm* Parser::parseStatement() {
                     }
                 }
             }
+        }
     } else if (match(Token::INSERT)) {
     cout << "INSERT statement recognized." << endl;  // Depuración
     if (match(Token::INTO)) {
@@ -313,9 +316,10 @@ Stm* Parser::parseStatement() {
                     if (match(Token::ID)) {
                         string column = previous->lexema;
                         if (match(Token::ASSIGN)) {
-                            if (match(Token::ID)) {
+                            if (match(Token::NUM)) {
                                 string value = previous->lexema;
-                                if (match(Token::SEMICOLON)) { // Verificar si hay un punto y coma al final
+                                if (match(Token::SEMICOLON)) {
+                                    cout<< "Se elimino correctamente"<<endl;
                                     return new DeleteStatement(table_name, column, value);
                                 } else {
                                     cout << "Error: Se esperaba un ';' después de DELETE." << endl;
@@ -328,9 +332,6 @@ Stm* Parser::parseStatement() {
             }
         }
     }
-
-    return nullptr; // Si no reconoce el comando
-}
 
 
 /*
