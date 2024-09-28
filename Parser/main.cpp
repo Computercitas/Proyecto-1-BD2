@@ -19,7 +19,7 @@ int main() {
     const char* input4 = "delete from Books where ISBN = \"9783161484100\";";
 
     // Crea un scanner con la consulta
-    Scanner* scanner = new Scanner(input); // Cambiar `input1` a `input2`, `input3` o `input4` para otras consultas
+    Scanner* scanner = new Scanner(input2); // Cambiar `input1` a `input2`, `input3` o `input4` para otras consultas
     Parser* parser = new Parser(scanner);
     
     // Parsear la consulta

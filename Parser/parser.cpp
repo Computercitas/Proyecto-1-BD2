@@ -1,9 +1,9 @@
 #include "parser.hh"
 
-const char* Token::token_names[29] = { "LPAREN", "RPAREN", "ID", "SEMICOLON", "ASSIGN", "ERR", "END", 
+const char* Token::token_names[30] = { "LPAREN", "RPAREN", "ID", "SEMICOLON", "ASSIGN", "ERR", "END", 
         "COMILLAS", "COLON", "CREATE", "INSERT", "DELETE", "SELECT", 
         "FROM", "USING", "TABLE_ID", "VALUES", "WHERE", "BETWEEN", 
-        "TABLE", "FILE", "INTO", "AND", "ID", "INDEX", "SEQUENTIAL", "SLASH", "POINT", "ALL"};
+        "TABLE", "FILE", "INTO", "AND", "ID", "INDEX", "SEQUENTIAL", "SLASH", "POINT", "ALL", "COMA"};
 
 Token::Token(Type type) : type(type) {
     lexema = "";
@@ -46,12 +46,12 @@ Token* Scanner::nextToken() {
     Token* token;
     char c;
 
-    // Consume espacios en blanco
+    // Consume espacios en blanco y tabulaciones
     c = nextChar();
     while (isspace(c)) c = nextChar();
     
-    if (c == '\0') return new Token(Token::END);
-    
+    if (c == '\0') return new Token(Token::END); // Fin de entrada
+
     startLexema(); // Comienza a construir el lexema
 
     // Manejo de palabras reservadas o identificadores
@@ -66,8 +66,16 @@ Token* Scanner::nextToken() {
             token = new Token(Token::ID, lex);
         }
     }
-    // Manejo de caracteres especiales, incluyendo comillas
-    else if (strchr("()/*\";=.", c)) {
+
+    // Manejo de caracteres numéricos
+    else if (isdigit(c)) { // Manejo de dígitos
+        while (isdigit(c)) c = nextChar(); // Captura todos los dígitos
+        rollBack(); // Retrocede para no perder el último carácter
+        string lex = getLexema();
+        token = new Token(Token::ID, lex); // Trata números como ID por ahora
+    }
+    // Manejo de caracteres especiales, incluyendo comas
+    else if (strchr("()/*\";=.,", c)) { // Asegúrate de incluir la coma en esta lista
         switch (c) {
             case '(': token = new Token(Token::LPAREN); break;
             case ')': token = new Token(Token::RPAREN); break;
@@ -77,14 +85,16 @@ Token* Scanner::nextToken() {
             case '\"': token = new Token(Token::COMILLAS); break;
             case '/': token = new Token(Token::SLASH); break;
             case '.': token = new Token(Token::POINT); break;
+            case ',': token = new Token(Token::COMA); break; // Agrega la coma como un token válido
             default: cout << "No debería llegar acá" << endl; break;
         }
     }
     // Manejo de caracteres no reconocidos
     else {
         token = new Token(Token::ERR, getLexema());
+        cout << "Unrecognized character encountered: " << (int)c << endl; // Mensaje para caracteres no reconocidos
     }
-    
+
     return token; // Retornar el token creado
 }
 
@@ -255,27 +265,34 @@ Stm* Parser::parseStatement() {
             }
         }
     } else if (match(Token::INSERT)) {
-        if (match(Token::INTO)) {
-            if (match(Token::ID)) {
-                string table_name = previous->lexema;
-                if (match(Token::VALUES)) {
-                    if (match(Token::LPAREN)) {
-                        vector<string> values;
-                        while (!match(Token::RPAREN)) {
-                            values.push_back(previous->lexema);
-                            advance();
+    cout << "INSERT statement recognized." << endl;  // Depuración
+    if (match(Token::INTO)) {
+        cout << "INTO keyword recognized." << endl;  // Depuración
+        if (match(Token::ID)) {
+            string table_name = previous->lexema;
+            cout << "Table name for INSERT: " << table_name << endl;  // Depuración
+            if (match(Token::VALUES)) {
+                cout << "VALUES keyword recognized." << endl;  // Depuración
+                if (match(Token::LPAREN)) {
+                    vector<string> values;
+                    while (!match(Token::RPAREN)) {
+                        values.push_back(previous->lexema); // Captura el valor
+                        if (match(Token::COMA)) { // Verifica si hay una coma después del valor
+                            continue; // Continúa si hay una coma, captura el siguiente valor
                         }
-                        if (match(Token::SEMICOLON)) { // Verificar si hay un punto y coma al final
-                            return new InsertStatement(table_name, values);
-                        } else {
-                            cout << "Error: Se esperaba un ';' después de INSERT." << endl;
-                            exit(1);
-                        }
+                        advance(); // Avanza si hay un valor después
                     }
+                    cout << "Values captured for INSERT: ";
+                    for (const auto& value : values) {
+                        cout << value << " ";  // Mostrar valores capturados
+                    }
+                    cout << endl;  // Nueva línea
+                    return new InsertStatement(table_name, values);
                 }
             }
         }
-    } else if (match(Token::DELETE)) {
+    }
+} else if (match(Token::DELETE)) {
         if (match(Token::FROM)) {
             if (match(Token::ID)) {
                 string table_name = previous->lexema;
