@@ -170,12 +170,13 @@ SELECT ::= "select" "*" "from" TABLE_ID "where" KEY "between" value1 "and" value
 ### Ejemplos de uso
     // Parser para leer una consulta
     const char* input = "create table Books from file \"data.csv\" using index sequential(ISBN);";
-    const char* input2 = "insert into Books values (\"9783161484100\", \"The Catcher in the Rye\", \"J.D. Salinger\", 1951, \"Little, Brown and Company\");";
-    const char* input3 = "select * from Books where ISBN = \"9783161484100\";";
-    const char* input4 = "delete from Books where ISBN = \"9783161484100\";";
+    const char* input2 = "insert into Books values (\"9783161484100\", \"The Catcher in the Rye\", \"J D Salinger\", 1951, \"Brown and Company\");";
+    const char* input3 = "select * from Books where ISBN = 9783161484100;";
+    const char* input4 = "delete from Books where ISBN = 9783161484100;";
+    const char* input5 = "select * from Books where ISBN between 11 and 50;";
 
     // Crea un scanner con la consulta
-    Scanner* scanner = new Scanner(input2); // Cambiar `input1` a `input2`, `input3` o `input4` para otras consultas
+    Scanner* scanner = new Scanner(input); // Cambiar `input1` a `input2`, `input3` o `input4` para otras consultas
     Parser* parser = new Parser(scanner);
 
 ### Discusión y análisis
