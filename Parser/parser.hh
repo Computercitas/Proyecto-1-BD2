@@ -19,9 +19,9 @@ public:
         LPAREN = 0, RPAREN, KEY, SEMICOLON, ASSIGN, ERR, END, 
         COMILLAS, COLON, CREATE, INSERT, DELETE, SELECT, 
         FROM, USING, TABLE_ID, VALUES, WHERE, BETWEEN, 
-        TABLE, FILE, INTO, AND, ID, INDEX, SEQUENTIAL,SLASH,POINT, ALL, COMA
+        TABLE, FILE, INTO, AND, ID, INDEX, SEQUENTIAL,SLASH,POINT, ALL, COMA, NUM
     };
-    static const char* token_names[30];
+    static const char* token_names[31];
     Type type;
     string lexema;
 
