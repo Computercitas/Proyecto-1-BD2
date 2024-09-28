@@ -40,7 +40,36 @@ Indexar archivos para poder minimizar los accesos a la memoria principal y poder
 ## Técnicas Utilizadas
 
 ### AVL
-Utiliza un árbol binario con rotaciones, donde los nodos son las llaves de los registros.
+
+El uso de AVL proporciona una mayor eficiencia en la búsqueda y gestión de registros individuales debido a su naturaleza completamente dinámica. Esto lo convierte en una opción ideal para aplicaciones que requieren búsquedas frecuentes y eficientes de registros. Además, es especialmente útil para aplicaciones que necesitan realizar búsquedas por rangos de valores en la clave de índice.
+
+#### Inserción (add)
+
+El proceso de inserción en un archivo AVL comienza verificando si el árbol está vacío. Si es así, se establece la raíz y se escribe el registro en la posición inicial del archivo. Si el árbol no está vacío, se lee el nodo actual y se comparan las claves. Si la clave del nuevo registro es menor, se desciende por el subárbol izquierdo; si es mayor, por el subárbol derecho. El nuevo nodo se inserta como una hoja, y durante este proceso, se verifica la altura del árbol para determinar si es necesario realizar rotaciones. Finalmente, se llama a la función de balanceo para mantener el árbol equilibrado, asegurando así la eficiencia en las operaciones de búsqueda.
+
+#### Búsqueda
+
+El proceso de búsqueda en un archivo AVL comienza verificando si el nodo actual es nulo. Si no lo es, se lee el registro correspondiente desde el archivo. Luego, se compara la clave buscada con la clave del nodo actual. Si la clave buscada es menor, la búsqueda continúa recursivamente en el subárbol izquierdo. Si es mayor, se procede con el subárbol derecho. Si la clave coincide, se añade el registro al vector de resultados y se continúa la búsqueda en ambos subárboles para encontrar posibles duplicados. Este método asegura que se recorran todos los nodos relevantes, manteniendo la eficiencia del árbol AVL en las operaciones de búsqueda.
+
+#### Búsqueda por rango
+
+La búsqueda por rango en un archivo AVL localiza registros dentro de un rango específico comparando la clave del nodo con los límites del rango. Si la clave es mayor o igual a beginKey, se busca en el subárbol izquierdo; y si es menor o igual a endKey, se busca en el subárbol derecho. Este método garantiza la eficiencia del árbol AVL al encontrar todos los nodos relevantes.
+
+#### Remove
+
+El proceso de eliminación en un archivo AVL, sigue varios pasos para asegurar que el árbol se mantenga balanceado después de la eliminación de un nodo. Se lee el nodo actual y se compara la clave del nodo a eliminar con la clave del nodo actual. Si la clave es menor, se llama recursivamente a la función de eliminación en el subárbol izquierdo; si es mayor, en el subárbol derecho. Si la clave coincide, se manejan tres casos:
+
+1. *Nodo Hoja*: Si el nodo es una hoja (sin hijos), se elimina directamente y se actualiza el puntero del nodo padre.
+2. *Nodo con un Hijo* : Si el nodo tiene solo un hijo, se reemplaza el nodo por su hijo.
+3. *Nodo con Dos Hijos*: Si el nodo tiene dos hijos, se encuentra el sucesor en el subárbol derecho (el nodo con el valor mínimo), se reemplaza el nodo actual por el sucesor y se elimina el sucesor del subárbol derecho.
+
+Ilustración:
+
+![avlremove](/images/avlremove1.png "avlremove")
+
+![avlremove](/images/avlremove2.png "avlremove")
+
+![avlremove](/images/avlremove3.png "avlremove")
 
 #### Inserción
 Vamos comparando los nodos con la llave que queremos insertar, bajamos por la izquierda si es menor y por la derecha si es mayor y insertamos el nodo como hoja, siempre verificando la altura para ver si tenemos que realizar rotaciones o no.
@@ -60,14 +89,13 @@ Búsqueda binaria, bajamos por los nodos.
 |--------------------|-------------------------------------------------------------------------------------------------------|----------------------------------|
 | **insert()**         | Inserción en las hojas. Con rotación caso necesario. | O(lg n) |
 | **search()**         | Búsqueda binaria bajando por los nodos | O(lg n) |
-| **rangeSearch()**    |  |  |
-| **remove()**         |  |  |
-
-
+| **rangeSearch()**    | 	Búsqueda de todos los registros cuyas claves están dentro de un rango específico. | O(log n + k) donde k es el número de elementos en el rango |
+| **remove()**         | Eliminación de un nodo, seguido de balanceo del árbol. | O(log n) |
 
 
 ### Sequential File
 Este método emplea dos archivos distintos para gestionar los datos: un archivo principal (main) y un archivo auxiliar (aux). En el archivo principal los registros se mantienen ordenados. Insertamos nuevos registros en el archivo auxiliar y luego lo juntamos con el archivo principal de forma ordenada.
+![SequentialFile](/images/SequentialFile.png "SequentialFile")
 
 #### Inserción (add)
 Insertamos nuevos registros al final del archivo auxiliar hasta que su tamaño sea mayor o igual al logaritmo de la cantidad de registros en el archivo main. Entonces hacemos merge() para poder insertar los registros del archivo auxiliar al archivo principal.
@@ -78,14 +106,15 @@ Realizamos una búsqueda binaria en el archivo principal, ya que los índices es
 #### Merge
 Ordenamos los registros ubicados en el archivo auxiliar y creamos un nuevo archivo para hacer la reconstrucción. Luego vamos insertando  los registros antiguos del archivo y los registros del archivo auxiliar ordenado en el nuevo archivo, uno por uno, de forma ordenada. Por último borramos los archivos antiguos y renombramos los archivos nuevos. Al final tenemos un nuevo archivo auxiliar vacio y un archivo main ordenado.
 
+Tenemos las siguientes complejidades en base a nuestra implementación: 
 | Función            | Descripción                                                                                           | Complejidad                       |
 |--------------------|-------------------------------------------------------------------------------------------------------|----------------------------------|
-| **add()**         | Inserción constante al final del archivo auxiliar.  | Principal: O(), Auxiliar: O()  |
-| **merge()**       | Ordeno el archivo auxiliar e inserto todos los elementos de main y aux en un nuevo archivo. | Principal: O(), Auxiliar: O()  |
-| **search()**      | Búsqueda binaria en el archivo main, si no encuentra busca linealmente en el archivo aux| Principal: O(lg n), Auxiliar: O(n)  |
-| **rangeSearch()** | Búsqueda lineal en ambos archivos | Principal: O(n), Auxiliar: O(n)  |
-| **remove()**      | Busco linealmente y sobreescribo el registro, si no encuentra busco en aux | Principal: O(n), Auxiliar: O(n)  |
+| **add()**         | Inserción constante al final del archivo auxiliar. En caso de merge ordenamos archivo auxiliar y reconstruimos archivo principal insertando todos los registros nuevamente | Sin merge: O(1), Con merge: O(m log m + n)  |
+| **search()**      | Búsqueda binaria en el archivo main, si no encuentra busca linealmente en el archivo aux | Principal: O(lg n), Auxiliar: O(m)  |
+| **rangeSearch()** | Búsqueda lineal en ambos archivos | Principal: O(n), Auxiliar: O(m)  |
+| **remove()**      | Busco linealmente y sobreescribo el registro, si no encuentra busco en aux | Principal: O(n), Auxiliar: O(m)  |
 
+Cabe destacar que el archivo aux tiene maximo lg(n) elementos, por lo tanto la complejidad O(m) tecnicamente es equivalente a O(lg(n))
 
 #### Eliminación
 Buscamos el key del registro por eliminarse, en ambos archivos. Luego sobreescribimos ese registro, con una llave -1 para indicar que es un registro que fue borrado.
