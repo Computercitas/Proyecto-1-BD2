@@ -332,7 +332,8 @@ Stm* Parser::parseStatement() {
             }
         }
     }
-
+    return nullptr;
+}
 
 /*
 Exp* Parser::parseTerm() {
