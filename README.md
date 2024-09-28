@@ -159,7 +159,7 @@ DELETE ::= "delete" "from" TABLE_ID "where" KEY "=" value;
 
 SELECT ::= "select" "*" "from" TABLE_ID "where" KEY "between" value "and" value 
           | "select" "*" "from" TABLE_ID "where" KEY "=" value;
-
+```
 
 ### Estructura del Parser
 - Token: Representa los tokens individuales generados por el analizador léxico, incluyendo tipos como identificadores, números, palabras reservadas y símbolos.
