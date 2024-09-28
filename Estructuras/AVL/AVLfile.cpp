@@ -6,8 +6,9 @@
 #include <sstream>
 #include <string>
 #include <cmath>
+#include <chrono> 
 using namespace std;
-
+using namespace chrono;
 
 struct Record {
 
@@ -437,47 +438,40 @@ int main() {
     getline(bx_books, line); // saltar header
 
     int i=1;
-    unsigned long max_code = 0;
+    auto start = high_resolution_clock::now(); //calcular tiempo de inserción
     while (getline(bx_books, line)) { // insertar cada linea del csv en sequential file
         parse_line(line, book);  
-        //cout << "Max code: " << max_code << endl;
-        //book.showData(); cout << endl;
-        if(book.code > max_code) max_code = book.code;
         avlFile.insert(book); 
-        if (i%100 == 0) cout << "Insertado: " << i << endl;
+        if (i%10000 == 0) cout << i << " registros insertados" << endl;
         i++;
     }
-
-    //print_nodes(filename);
+    auto stop = high_resolution_clock::now();
+    auto duration = duration_cast<milliseconds>(stop - start);
+    cout << "Tiempo para insertar: " << duration.count() << " ms" << endl;
 
     //find key invalido
-    //rec = avlFile.find(123124);
-    //rec.showData();
+    rec = avlFile.find(123124);
+    rec.showData();
 
     //find key valido
-    //rec = avlFile.find(3453209419);
-    //rec.showData();
+    rec = avlFile.find(689821166);
+    rec.showData();
 
     //search key valido
-    //v = avlFile.search(399135790);
-    //for (auto elem : v) elem.showData();
+    v = avlFile.search(399135790);
+    for (auto elem : v) elem.showData();
 
     //search key invalido
-    //v = avlFile.search(1231234);
-    //for (auto elem : v) elem.showData();
+    v = avlFile.search(1231234);
+    for (auto elem : v) elem.showData();
 
     //range search donde ningun key en el rango es valido
-    //v = avlFile.rangeSearch(0,10);
-    //for (auto elem : v) elem.showData();
+    v = avlFile.rangeSearch(0,10);
+    for (auto elem : v) elem.showData();
 
     //range search con keys validos en el rango
-    //v = avlFile.rangeSearch(2005018,80652121);
-    //for (auto elem : v) elem.showData();
-
-
-        /*
-    //AVLFile<int> avlFile("avl_data.dat");
-    */                                  
+    v = avlFile.rangeSearch(2005018,80652121);
+    for (auto elem : v) elem.showData();
 
     delete &avlFile;
     return 0; 
