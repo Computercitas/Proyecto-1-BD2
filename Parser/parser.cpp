@@ -38,6 +38,8 @@ Scanner::Scanner(const char* s) : input(s), first(0), current(0) {
     reserved["table"] = Token::TABLE;
     reserved["index"] = Token::INDEX;
     reserved["sequential"] = Token::SEQUENTIAL;
+    reserved["into"] = Token::INTO;
+    reserved["values"] = Token::VALUES;
 }
 
 Token* Scanner::nextToken() {
@@ -72,21 +74,7 @@ Token* Scanner::nextToken() {
             case '*': token = new Token(Token::ALL); break;
             case ';': token = new Token(Token::SEMICOLON); break;
             case '=': token = new Token(Token::ASSIGN); break;
-            case '\"': { // Manejo de comillas
-                string lexeme;
-                c = nextChar();
-                while (c != '\"' && c != '\0') {
-                    lexeme += c; // Captura el contenido entre comillas
-                    c = nextChar();
-                }
-                if (c == '\"') { // Si encontramos otra comilla, creamos el token
-                    token = new Token(Token::COMILLAS, lexeme);
-                } else {
-                    // Error si se encuentra un final de cadena sin una comilla de cierre
-                    token = new Token(Token::ERR, "Unmatched quotes");
-                }
-                break; // Salimos del switch
-            }
+            case '\"': token = new Token(Token::COMILLAS); break;
             case '/': token = new Token(Token::SLASH); break;
             case '.': token = new Token(Token::POINT); break;
             default: cout << "No debería llegar acá" << endl; break;
