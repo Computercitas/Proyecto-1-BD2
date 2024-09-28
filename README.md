@@ -46,6 +46,17 @@ El uso de AVL proporciona una mayor eficiencia en la búsqueda y gestión de reg
 #### Inserción (add)
 
 El proceso de inserción en un archivo AVL comienza verificando si el árbol está vacío. Si es así, se establece la raíz y se escribe el registro en la posición inicial del archivo. Si el árbol no está vacío, se lee el nodo actual y se comparan las claves. Si la clave del nuevo registro es menor, se desciende por el subárbol izquierdo; si es mayor, por el subárbol derecho. El nuevo nodo se inserta como una hoja, y durante este proceso, se verifica la altura del árbol para determinar si es necesario realizar rotaciones. Finalmente, se llama a la función de balanceo para mantener el árbol equilibrado, asegurando así la eficiencia en las operaciones de búsqueda.
+| Cantidad de elementos | Tiempo de ejecución    |                                                                               
+|-----------------------|------------------------|
+|     10k               | 126ms                  |
+|     20k               | 290ms                  |
+|     50k               | 600ms                  |
+
+Rotaciones:
+
+<img src="./images/AVL_Tree_Example.gif" alt="rotations" width="400" height="300">
+
+
 
 #### Búsqueda
 
@@ -53,7 +64,7 @@ El proceso de búsqueda en un archivo AVL comienza verificando si el nodo actual
 
 #### Búsqueda por rango
 
-La búsqueda por rango en un archivo AVL localiza registros dentro de un rango específico comparando la clave del nodo con los límites del rango. Si la clave es mayor o igual a beginKey, se busca en el subárbol izquierdo; y si es menor o igual a endKey, se busca en el subárbol derecho. Este método garantiza la eficiencia del árbol AVL al encontrar todos los nodos relevantes.
+La búsqueda por rango en un archivo AVL localiza registros dentro de un rango específico comparando la clave del nodo con los límites del rango. Si la clave es mayor o igual a `beginKey`, se busca en el subárbol izquierdo; y si es menor o igual a `endKey`, se busca en el subárbol derecho. Este método garantiza la eficiencia del árbol AVL al encontrar todos los nodos relevantes.
 
 #### Remove
 
@@ -65,19 +76,11 @@ El proceso de eliminación en un archivo AVL, sigue varios pasos para asegurar q
 
 Ilustración:
 
-<img src="./images/avlremove1.png" alt="SequentialFile" width="400" height="250">
+<img src="./images/avlremove1.png" alt="SequentialFile" width="450" height="300">
 
-<img src="./images/avlremove2.png" alt="SequentialFile" width="400" height="250">
+<img src="./images/avlremove2.png" alt="SequentialFile" width="450" height="300">
 
-<img src="./images/avlremove3.png" alt="SequentialFile" width="400" height="250">
-
-#### Inserción
-Vamos comparando los nodos con la llave que queremos insertar, bajamos por la izquierda si es menor y por la derecha si es mayor y insertamos el nodo como hoja, siempre verificando la altura para ver si tenemos que realizar rotaciones o no.
-| Cantidad de elementos | Tiempo de ejecución    |                                                                               
-|-----------------------|------------------------|
-|     10k               | 126ms                  |
-|     20k               | 290ms                  |
-|     50k               | 600ms                  |
+<img src="./images/avlremove3.png" alt="SequentialFile" width="450" height="300">
 
 #### Búsqueda
 Búsqueda binaria, bajamos por los nodos.
@@ -94,12 +97,12 @@ Búsqueda binaria, bajamos por los nodos.
 
 
 ### Sequential File
-Este método emplea dos archivos distintos para gestionar los datos: un archivo principal (main) y un archivo auxiliar (aux). En el archivo principal los registros se mantienen ordenados. Insertamos nuevos registros en el archivo auxiliar y luego lo juntamos con el archivo principal de forma ordenada.
+Este método emplea dos archivos distintos para gestionar los datos: un archivo principal `main` y un archivo auxiliar `aux`. En el archivo principal los registros se mantienen ordenados. Insertamos nuevos registros en el archivo auxiliar y luego lo juntamos con el archivo principal de forma ordenada.
 <img src="./images/SequentialFile.png" alt="SequentialFile" width="700" height="450">
 
 
 #### Inserción (add)
-Insertamos nuevos registros al final del archivo auxiliar hasta que su tamaño sea mayor o igual al logaritmo de la cantidad de registros en el archivo main. Entonces hacemos merge() para poder insertar los registros del archivo auxiliar al archivo principal.
+Insertamos nuevos registros al final del archivo auxiliar hasta que su tamaño sea mayor o igual al logaritmo de la cantidad de registros en el archivo main. Entonces hacemos `merge()` para poder insertar los registros del archivo auxiliar al archivo principal.
 | Cantidad de elementos | Tiempo de ejecución    |                                                                               
 |-----------------------|------------------------|
 |     1k                | 1547ms                 |
@@ -120,35 +123,35 @@ Tenemos las siguientes complejidades en base a nuestra implementación:
 | **rangeSearch()** | Búsqueda lineal en ambos archivos | Principal: O(n), Auxiliar: O(m)  |
 | **remove()**      | Busco linealmente y sobreescribo el registro, si no encuentra busco en aux | Principal: O(n), Auxiliar: O(m)  |
 
-Cabe destacar que el archivo aux tiene maximo lg(n) elementos, por lo tanto la complejidad O(m) tecnicamente es equivalente a O(lg(n))
+Cabe destacar que el archivo aux tiene maximo `lg(n)` elementos, por lo tanto la complejidad `O(m)` técnicamente es equivalente a `O(lg(n))`. Si implementamos el sequential file utilizando punteros se podría diminuir la complejidad de la inserción, ya que podríamos aprovechar los espacios vacíos de los registros borrados para poder insertar.
 
 #### Eliminación
-Buscamos el key del registro por eliminarse, en ambos archivos. Luego sobreescribimos ese registro, con una llave -1 para indicar que es un registro que fue borrado.
-
-### B+ tree (Se intentó)
-Funcionan las operaciones pero para una cantidad pequeña de registros.
+Buscamos el key del registro por eliminarse, en ambos archivos. Luego sobreescribimos ese registro, con una llave `-1` para indicar que es un registro que fue borrado.
 
 ### Extendible Hashing (Se intentó)
 Se implementó algunas funcionalidades básicas del Extendible Hashing con indexación binaria, utilizando buckets de archivos. Se implementó la inserción, split y el sistema para nombrar los archivos de cada bucket.
 
+### B+ tree (Se intentó)
+Funcionan las operaciones pero para una cantidad pequeña de registros.
+
 ## SQL Parser
 
 ### Descripción
-Este parser permite la interpretación de instrucciones SQL comunes, como CREATE, INSERT, DELETE, y SELECT, facilitando la integración de consultas en aplicaciones que requieren manipulación de bases de datos.
+Este parser permite la interpretación de instrucciones SQL comunes, como `CREATE`, `INSERT`, `DELETE`, y `SELECT`, facilitando la integración de consultas en aplicaciones que requieren manipulación de bases de datos.
 
 ### Características
 - Análisis de Consultas: Capaz de procesar sentencias SQL complejas y desglosarlas en componentes estructurales, permitiendo su interpretación y ejecución.
 - Soporte para Múltiples Comandos: Maneja una variedad de comandos SQL, incluyendo:
-  -  CREATE TABLE: Crea nuevas tablas en la base de datos con la posibilidad de especificar rutas de archivo y columnas clave.
-  -  INSERT: Permite la inserción de nuevos registros en las tablas existentes.
-  -  DELETE: Facilita la eliminación de registros basados en condiciones específicas.
-  -  SELECT: Realiza consultas para recuperar datos de las tablas, incluyendo la capacidad de realizar búsquedas por rango.
+  -  `CREATE TABLE`: Crea nuevas tablas en la base de datos con la posibilidad de especificar rutas de archivo y columnas clave.
+  -  `INSERT`: Permite la inserción de nuevos registros en las tablas existentes.
+  -  `DELETE`: Facilita la eliminación de registros basados en condiciones específicas.
+  -  `SELECT`: Realiza consultas para recuperar datos de las tablas, incluyendo la capacidad de realizar búsquedas por rango.
 
 ### Estructura del Parser
 - Token: Representa los tokens individuales generados por el analizador léxico, incluyendo tipos como identificadores, números, palabras reservadas y símbolos.
 - Scanner: Responsable de leer la entrada de texto y generar tokens. Utiliza un enfoque basado en la máquina de estados para identificar diferentes tipos de lexemas.
-- Parser: La clase principal que analiza los tokens generados por el scanner y construye una representación estructural de las consultas SQL, devolviendo objetos de declaración (como CreateTableStatement).
-- Declaraciones: Clases que representan las diversas instrucciones SQL, como CreateTableStatement, InsertStatement, y DeleteStatement.
+- Parser: La clase principal que analiza los tokens generados por el scanner y construye una representación estructural de las consultas SQL, devolviendo objetos de declaración (como `CreateTableStatement`).
+- Declaraciones: Clases que representan las diversas instrucciones SQL, como `CreateTableStatement`, `InsertStatement`, y `DeleteStatement`.
 
 ### Ejemplos de uso
     // Parser para leer una consulta
@@ -160,8 +163,6 @@ Este parser permite la interpretación de instrucciones SQL comunes, como CREATE
     // Crea un scanner con la consulta
     Scanner* scanner = new Scanner(input2); // Cambiar `input1` a `input2`, `input3` o `input4` para otras consultas
     Parser* parser = new Parser(scanner);
-
-## Resultados Experimentales
 
 ### Discusión y análisis
 Algunas estructuras pueden ser optimizadas
