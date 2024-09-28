@@ -157,7 +157,7 @@ INSERT ::= "insert" "into" TABLE_ID "values" (unsigned long, char, char, unsigne
 
 DELETE ::= "delete" "from" TABLE_ID "where" KEY "=" value;
 
-SELECT ::= "select" "*" "from" TABLE_ID "where" KEY "between" value "and" value 
+SELECT ::= "select" "*" "from" TABLE_ID "where" KEY "between" value1 "and" value2 
           | "select" "*" "from" TABLE_ID "where" KEY "=" value;
 ```
 
