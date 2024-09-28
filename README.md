@@ -65,11 +65,11 @@ El proceso de eliminación en un archivo AVL, sigue varios pasos para asegurar q
 
 Ilustración:
 
-![avlremove1](/images/avlremove1.png "avlremove1")
+<img src="./images/avlremove1.png" alt="SequentialFile" width="500" height="350">
 
-![avlremove2](/images/avlremove2.png "avlremove2")
+<img src="./images/avlremove2.png" alt="SequentialFile" width="500" height="350">
 
-![avlremove3](/images/avlremove3.png "avlremove3")
+<img src="./images/avlremove3.png" alt="SequentialFile" width="500" height="350">
 
 #### Inserción
 Vamos comparando los nodos con la llave que queremos insertar, bajamos por la izquierda si es menor y por la derecha si es mayor y insertamos el nodo como hoja, siempre verificando la altura para ver si tenemos que realizar rotaciones o no.
@@ -95,7 +95,8 @@ Búsqueda binaria, bajamos por los nodos.
 
 ### Sequential File
 Este método emplea dos archivos distintos para gestionar los datos: un archivo principal (main) y un archivo auxiliar (aux). En el archivo principal los registros se mantienen ordenados. Insertamos nuevos registros en el archivo auxiliar y luego lo juntamos con el archivo principal de forma ordenada.
-![SequentialFile](/images/SequentialFile.png "SequentialFile")
+<img src="./images/SequentialFile.png" alt="SequentialFile" width="700" height="450">
+
 
 #### Inserción (add)
 Insertamos nuevos registros al final del archivo auxiliar hasta que su tamaño sea mayor o igual al logaritmo de la cantidad de registros en el archivo main. Entonces hacemos merge() para poder insertar los registros del archivo auxiliar al archivo principal.
