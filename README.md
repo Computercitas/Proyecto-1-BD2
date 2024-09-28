@@ -146,13 +146,20 @@ Este parser permite la interpretación de instrucciones SQL comunes, como `CREAT
   -  `INSERT`: Permite la inserción de nuevos registros en las tablas existentes.
   -  `DELETE`: Facilita la eliminación de registros basados en condiciones específicas.
   -  `SELECT`: Realiza consultas para recuperar datos de las tablas, incluyendo la capacidad de realizar búsquedas por rango.
-### Gramática del Parser
 
-Program:= CREATE | INSERT | DELETE | SELECT
-CREATE::= "create" "table" TABLE_ID "from" "file" filename "using" "index" structure "(" Key ")" ;
-INSERT:= "insert" "into" TABLE_ID "values" (unsigned long, char, char, unsigned short, char)
-DELETE:= "delete" "from" TABLE_ID "where" KEY "=" value
-SELECT:= "select" "" "from" TABLE_ID "where" KEY "between" value "and" value | "select" "" "from" TABLE_ID "where" KEY "=" value
+### Gramática del Parser
+```plaintext
+Program := CREATE | INSERT | DELETE | SELECT
+
+CREATE ::= "create" "table" TABLE_ID "from" "file" filename "using" "index" structure "(" Key ")";
+
+INSERT ::= "insert" "into" TABLE_ID "values" (unsigned long, char, char, unsigned short, char);
+
+DELETE ::= "delete" "from" TABLE_ID "where" KEY "=" value;
+
+SELECT ::= "select" "*" "from" TABLE_ID "where" KEY "between" value "and" value 
+          | "select" "*" "from" TABLE_ID "where" KEY "=" value;
+
 
 ### Estructura del Parser
 - Token: Representa los tokens individuales generados por el analizador léxico, incluyendo tipos como identificadores, números, palabras reservadas y símbolos.
