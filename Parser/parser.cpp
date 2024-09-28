@@ -73,7 +73,7 @@ Token* Scanner::nextToken() {
         while (isdigit(c)) c = nextChar(); // Captura todos los dígitos
         rollBack(); // Retrocede para no perder el último carácter
         string lex = getLexema();
-        token = new Token(Token::ID, lex); // Trata números como ID por ahora
+        token = new Token(Token::NUM, lex);
     }
     // Manejo de caracteres especiales, incluyendo comas
     else if (strchr("()/*\";=.,", c)) { // Asegúrate de incluir la coma en esta lista
