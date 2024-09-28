@@ -131,6 +131,36 @@ Funcionan las operaciones pero para una cantidad pequeña de registros.
 ### Extendible Hashing (Se intentó)
 Se implementó algunas funcionalidades básicas del Extendible Hashing con indexación binaria, utilizando buckets de archivos. Se implementó la inserción, split y el sistema para nombrar los archivos de cada bucket.
 
+## SQL Parser
+
+### Descripción
+Este parser permite la interpretación de instrucciones SQL comunes, como CREATE, INSERT, DELETE, y SELECT, facilitando la integración de consultas en aplicaciones que requieren manipulación de bases de datos.
+
+### Características
+- Análisis de Consultas: Capaz de procesar sentencias SQL complejas y desglosarlas en componentes estructurales, permitiendo su interpretación y ejecución.
+- Soporte para Múltiples Comandos: Maneja una variedad de comandos SQL, incluyendo:
+  -  CREATE TABLE: Crea nuevas tablas en la base de datos con la posibilidad de especificar rutas de archivo y columnas clave.
+  -  INSERT: Permite la inserción de nuevos registros en las tablas existentes.
+  -  DELETE: Facilita la eliminación de registros basados en condiciones específicas.
+  -  SELECT: Realiza consultas para recuperar datos de las tablas, incluyendo la capacidad de realizar búsquedas por rango.
+
+### Estructura del Parser
+- Token: Representa los tokens individuales generados por el analizador léxico, incluyendo tipos como identificadores, números, palabras reservadas y símbolos.
+- Scanner: Responsable de leer la entrada de texto y generar tokens. Utiliza un enfoque basado en la máquina de estados para identificar diferentes tipos de lexemas.
+- Parser: La clase principal que analiza los tokens generados por el scanner y construye una representación estructural de las consultas SQL, devolviendo objetos de declaración (como CreateTableStatement).
+- Declaraciones: Clases que representan las diversas instrucciones SQL, como CreateTableStatement, InsertStatement, y DeleteStatement.
+
+### Ejemplos de uso
+    // Parser para leer una consulta
+    const char* input = "create table Books from file \"data.csv\" using index sequential(ISBN);";
+    const char* input2 = "insert into Books values (\"9783161484100\", \"The Catcher in the Rye\", \"J.D. Salinger\", 1951, \"Little, Brown and Company\");";
+    const char* input3 = "select * from Books where ISBN = \"9783161484100\";";
+    const char* input4 = "delete from Books where ISBN = \"9783161484100\";";
+
+    // Crea un scanner con la consulta
+    Scanner* scanner = new Scanner(input2); // Cambiar `input1` a `input2`, `input3` o `input4` para otras consultas
+    Parser* parser = new Parser(scanner);
+
 ## Resultados Experimentales
 
 ### Discusión y análisis
