@@ -1,9 +1,9 @@
 #include "parser.hh"
 
-const char* Token::token_names[30] = { "LPAREN", "RPAREN", "ID", "SEMICOLON", "ASSIGN", "ERR", "END", 
+const char* Token::token_names[31] = { "LPAREN", "RPAREN", "ID", "SEMICOLON", "ASSIGN", "ERR", "END", 
         "COMILLAS", "COLON", "CREATE", "INSERT", "DELETE", "SELECT", 
         "FROM", "USING", "TABLE_ID", "VALUES", "WHERE", "BETWEEN", 
-        "TABLE", "FILE", "INTO", "AND", "ID", "INDEX", "SEQUENTIAL", "SLASH", "POINT", "ALL", "COMA"};
+        "TABLE", "FILE", "INTO", "AND", "ID", "INDEX", "SEQUENTIAL", "SLASH", "POINT", "ALL", "COMA", "NUM"};
 
 Token::Token(Type type) : type(type) {
     lexema = "";
@@ -40,6 +40,7 @@ Scanner::Scanner(const char* s) : input(s), first(0), current(0) {
     reserved["sequential"] = Token::SEQUENTIAL;
     reserved["into"] = Token::INTO;
     reserved["values"] = Token::VALUES;
+    reserved["and"] = Token::AND;
 }
 
 Token* Scanner::nextToken() {
@@ -241,17 +242,17 @@ Stm* Parser::parseStatement() {
         }
     }
 } else if (match(Token::SELECT)) {
-        if (match(Token::ALL)) { // Reconocer * en SELECT
+        if (match(Token::ALL)) {
             if (match(Token::FROM)) {
                 if (match(Token::ID)) {
                     string table_name = previous->lexema;
                     if (match(Token::WHERE)) {
                         if (match(Token::ID)) {
-                            string column = previous->lexema; // Debería ser "ISBN"
+                            string column = previous->lexema;
                             if (match(Token::ASSIGN)) {
                                 if (match(Token::ID)) {
                                     string value = previous->lexema;
-                                    if (match(Token::SEMICOLON)) { // Verificar si hay un punto y coma al final
+                                    if (match(Token::SEMICOLON)) {
                                         return new SelectStatement(table_name, column, value);
                                     } else {
                                         cout << "Error: Se esperaba un ';' después de SELECT." << endl;
@@ -259,11 +260,23 @@ Stm* Parser::parseStatement() {
                                     }
                                 }
                             }
+                            else if(match(Token::BETWEEN)){
+                                if(match(Token::NUM)){
+                                    long unsigned num1 = stoul(previous -> lexema);
+                                    if(match(Token::AND)){
+                                        if(match(Token::NUM)){
+                                            long unsigned num2 = stoul(previous -> lexema);
+                                            cout<<"Busque de rango desde "<<num1<<" hasta "<<num2<<endl;
+                                            
+                                        }
+
+                                    }
+                                }
+                            }
                         }
                     }
                 }
             }
-        }
     } else if (match(Token::INSERT)) {
     cout << "INSERT statement recognized." << endl;  // Depuración
     if (match(Token::INTO)) {
