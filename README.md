@@ -3,11 +3,11 @@ Proyecto 1 del curso de Base de Datos 2, relacionado a organización de archivos
 
 ### Autores
 
-- Mariel Carolina Tovar Tolentino
-- Noemi Alejandra Huarino Anchillo
-- Sergio Sebastian Sotil Lozada
-- Davi Magalhaes Eler
-- Jose Eddison Pinedo Espinoza
+- [Mariel Carolina Tovar Tolentino](https://github.com/MarielUTEC)  
+- [Noemi Alejandra Huarino Anchillo](https://github.com/NoemiHuarino-utec)  
+- [Sergio Sebastian Sotil Lozada](https://github.com/Sergio-So)  
+- [Davi Magalhaes Eler](https://github.com/CS-DaviMagalhaes)  
+- [Jose Eddison Pinedo Espinoza](https://github.com/EddisonPinedoEsp) 
 
 ## Introducción
 
