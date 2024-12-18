@@ -18,6 +18,20 @@ struct AdultRecord {
     int Edad;
     string Sexo;    // Sexo ("M" o "F")
 
+    // Constructor por defecto
+    AdultRecord() {}
+
+    // Constructor para inicializar un registro
+    AdultRecord(string DNI, const string &  Nombre, const string &Ocupacion, const string &Estado_Civil,
+                double  Ingreso_Mensual, int Edad, string Sexo)
+        : DNI(DNI), Nombre(Nombre), Ocupacion(Ocupacion), EstadoCivil(Estado_Civil),
+          IngresoMensual(Ingreso_Mensual), Edad(Edad), Sexo(Sexo) {}
+
+
+
+    bool operator>(const AdultRecord& other) const {
+        return DNI > other.DNI;
+    }
     // Sobrecarga del operador < para comparación en el AVL
     bool operator<(const AdultRecord& other) const {
         return DNI < other.DNI; // Comparación por DNI
@@ -27,36 +41,6 @@ struct AdultRecord {
         return DNI == other.DNI;
     }
 };
-
-// Cargar el dataset AdultDataset.csv
-void loadAdultDataset(const string& filename, AVLTree<AdultRecord>& tree) {
-    ifstream file(filename);
-    string line;
-
-    // Ignorar la primera línea (encabezado)
-    getline(file, line);
-
-    while (getline(file, line)) {
-        stringstream ss(line);
-        AdultRecord record;
-
-        // Leer los campos
-        getline(ss, record.DNI, ',');
-        getline(ss, record.Nombre, ',');
-        getline(ss, record.Ocupacion, ',');
-        getline(ss, record.EstadoCivil, ',');
-        ss >> record.IngresoMensual;
-        ss.ignore();
-        ss >> record.Edad;
-        ss.ignore();
-        getline(ss, record.Sexo);
-
-        // Insertar en el árbol AVL
-        tree.insert(record);
-    }
-
-    file.close();
-}
 
 // Clase que implementa un nodo del árbol AVL
 template <typename T>
@@ -140,7 +124,7 @@ private:
             return node; // Valor duplicado, no se permite insertar
         }
 
-        update(node);
+        update(node);// Actualizar altura y factor de balanceo
         return balance(node);// Balancear el árbol después de la inserción
     }
 
@@ -150,7 +134,36 @@ private:
         }
         return node;
     }
+    // Eliminar un nodo del árbol (busca y elimina el nodo por el DNI)
+    Node<T>* remove(Node<T>* node, const string& key) { // Ahora acepta un string (DNI)
+        if (node == nullptr) return nullptr;
 
+        if (key < node->value.DNI) { // Compara el DNI
+            node->left = remove(node->left, key);
+        } else if (key > node->value.DNI) {
+            node->right = remove(node->right, key);
+        } else {
+            // Nodo encontrado, realizar eliminación
+            if (node->left == nullptr) {
+                Node<T>* rightChild = node->right;
+                delete node;
+                return rightChild;
+            } else if (node->right == nullptr) {
+                Node<T>* leftChild = node->left;
+                delete node;
+                return leftChild;
+            } else {
+                Node<T>* successor = findMin(node->right);
+                node->value = successor->value;
+                node->right = remove(node->right, successor->value.DNI); // Usamos DNI del sucesor para eliminar
+            }
+        }
+
+        update(node); // Actualizamos altura y balance del nodo
+        return balance(node); // Balanceamos el árbol después de la eliminación
+    }
+
+    /*
     Node<T>* remove(Node<T>* node, T value) { //value=key=DNI
         if (node == nullptr) return nullptr;
 
@@ -176,14 +189,8 @@ private:
 
         update(node);
         return balance(node);
-    }
+    }*/
 //--
-    bool contains(Node<T>* node, T value) {
-        if (node == nullptr) return false;
-        if (value < node->value) return contains(node->left, value);
-        if (value > node->value) return contains(node->right, value);
-        return true; // Valor encontrado
-    }
 
     void inOrderTraversal(Node<T>* node, vector<T>& result) {
         if (node == nullptr) return;
@@ -232,11 +239,11 @@ public:
     }
 
     // Eliminar un valor por clave
-    void remove(T value) {
-        if (contains(root, value)) {
-            root = remove(root, value);
-            nodeCount--;
-        }
+    bool remove(const string& key) {
+        if (!root)
+            return false;
+        root = remove(root, key);
+        return true;
     }
 
     // Buscar por clave específica
@@ -253,27 +260,119 @@ public:
         return result;
     }
 
-    bool contains(T value) {
-        return contains(root, value);
-    }
-
     void display() {
         vector<T> result;
         inOrderTraversal(root, result);
-        for (const auto& val : result) cout << val.DNI << " ";
-        cout << endl;
+        cout << "DNI       | Nombre         | Ocupacion     | Estado Civil | Ingreso Mensual| Edad | Sexo" << endl;
+        cout << "---------------------------------------------------------------------------------" << endl;
+        for (const auto& val : result) {
+            cout << val.DNI << "     | " << val.Nombre << "        | " << val.Ocupacion 
+                << "    |  " << val.EstadoCivil << "  |   " << val.IngresoMensual 
+                << "   | " << val.Edad << " | " << val.Sexo << endl;
+        }
+    }
+/*
+    void display() {
+        vector<T> result;
+        inOrderTraversal(root, result);
+        for (const auto& val : result) {
+            cout << "DNI: " << val.DNI << ", Nombre: " << val.Nombre 
+                << ", Ocupacion: " << val.Ocupacion << ", Estado Civil: " << val.EstadoCivil
+                << ", Ingreso Mensual: " << val.IngresoMensual << ", Edad: " << val.Edad << ", Sexo: " << val.Sexo << endl;
+        }
+    }
+*/
+    // Agregar un nuevo registro
+    bool add(const T& record) {
+        if (!searchByDNI(record.DNI).empty()){
+            cout << "Registro duplicado: " << record.DNI << endl;
+            return false;
+        }
+        insert(record);
+        cout << "Registro agregado exitosamente: " << record.DNI << endl;
+        return true;
     }
 
     int size() {
         return nodeCount;
     }
 
-    // Búsqueda específica por DNI
-    vector<AdultRecord> searchByDNI(string key) {
-        vector<AdultRecord> result;
-        if (contains(root, AdultRecord{key, "", "", "", 0, 0, ""})) {
-            result.push_back(AdultRecord{key, "", "", "", 0, 0, ""});
-        }
-        return result;
+};
+
+// Cargar el dataset AdultDataset.csv
+void loadAdultDataset(const string& filename, AVLTree<AdultRecord>& tree) {
+    ifstream file(filename);
+    if (!file.is_open()) {
+        cerr << "Error al abrir el archivo: " << filename << endl;
+        return;
     }
+
+    string line;
+    while (getline(file, line)) {
+        stringstream ss(line);
+        AdultRecord record;
+        getline(ss, record.DNI, ',');
+        getline(ss, record.Nombre, ',');
+        getline(ss, record.Ocupacion, ',');
+        getline(ss, record.EstadoCivil, ',');
+        ss >> record.IngresoMensual; ss.ignore();
+        ss >> record.Edad; ss.ignore();
+        getline(ss, record.Sexo, ',');
+
+        cout << "Cargando: " << record.DNI << " - " << record.Nombre << endl;
+        tree.add(record);
+    }
+}
+
+int main() {
+    AVLTree<AdultRecord> tree;
+    cout << "Antes de la carga inicial: " << endl;
+    tree.display();
+
+    // Cargar registros desde el archivo CSV
+    string filename = "../data/Adultprueba.csv";
+    cout << "Cargando registros desde " << filename << "..." << endl;
+    loadAdultDataset(filename, tree);
+
+    // Mostrar los registros cargados
+    cout << "\nRegistros cargados en el arbol (en orden):" << endl;
+    tree.display();
+    cout << "\nTamanio del arbol despues de la carga: " << tree.size() << endl;
+
+    // Agregar registros al árbol
+    cout << "\nAgregando registros al arbol..." << endl;
+    tree.insert({"12345", "Alice", "Ingeniera", "Soltero/a", 5000.00, 29, "F"});
+    tree.insert({"23456", "Bob", "Profesora", "Casado/a", 4000.00, 35, "M"});
+    tree.insert({"34567", "Charlie", "Doctor", "Soltero/a", 6000.00, 40, "M"});
+    tree.insert({"12345", "Alicia", "Cientifica", "Soltero/a", 7000.00, 31, "F"}); // DNI repetido
+
+    tree.display();
+    cout << "Tamanio del arbol despues de la insercion: " << tree.size() << endl;
+
+    // Búsqueda específica
+    cout << "\nBusqueda especifica por DNI '12345':" << endl;
+    auto searchResults = tree.searchByDNI("12345");
+    if (!searchResults.empty()) {
+        for (const auto& record : searchResults)
+            cout << "DNI: " << record.DNI << ", Nombre: " << record.Nombre << endl;
+    } else {
+        cout << "No se encontraron registros con ese DNI." << endl;
+    }
+
+    // Búsqueda por rango
+    cout << "\nBusqueda por rango de DNI entre '12344' y '34568':" << endl;
+    auto rangeResults = tree.rangeSearch("12344", "34568");
+    for (const auto& record : rangeResults)
+        cout << "DNI: " << record.DNI << ", Nombre: " << record.Nombre << endl;
+
+    // Eliminar un nodo
+    cout << "\nEliminando el registro con DNI '23456'..." << endl;
+    tree.remove("23456");
+    tree.display();
+
+    cout << "Tamanio del arbol despues de la eliminacion: " << tree.size() << endl;
+
+    return 0;
+
+
 };
