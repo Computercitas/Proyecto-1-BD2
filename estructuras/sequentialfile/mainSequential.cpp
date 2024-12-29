@@ -71,7 +71,7 @@ int main()
 
     // Prueba de eliminación
     cout << "\nPrueba de Eliminacion: " << endl;
-    long deleteKey = 96165; // DNI a eliminar
+    long deleteKey = 35549204; // DNI a eliminar
     try
     {
         sequentialFile.remove(deleteKey);

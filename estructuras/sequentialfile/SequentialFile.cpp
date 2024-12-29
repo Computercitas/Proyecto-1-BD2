@@ -113,7 +113,7 @@ std::vector<Record> SequentialFile::rangeSearch(long startSueldo, long endSueldo
 
     // Buscar en mainFile
     for (const auto &record : mainRecords) {
-        if (record.ingreso_mensual >= startSueldo && record.ingreso_mensual <= endSueldo) {
+        if (!record.is_deleted && record.ingreso_mensual >= startSueldo && record.ingreso_mensual <= endSueldo) {
             // Verificar si el registro ya ha sido agregado
             if (seenDni.find(record.dni) == seenDni.end()) {
                 result.push_back(record);
@@ -124,7 +124,7 @@ std::vector<Record> SequentialFile::rangeSearch(long startSueldo, long endSueldo
 
     // Buscar en auxFile
     for (const auto &record : auxRecords) {
-        if (record.ingreso_mensual >= startSueldo && record.ingreso_mensual <= endSueldo) {
+        if (!record.is_deleted && record.ingreso_mensual >= startSueldo && record.ingreso_mensual <= endSueldo) {
             // Verificar si el registro ya ha sido agregado
             if (seenDni.find(record.dni) == seenDni.end()) {
                 result.push_back(record);
@@ -135,6 +135,7 @@ std::vector<Record> SequentialFile::rangeSearch(long startSueldo, long endSueldo
 
     return result;
 }
+
 
 
 void SequentialFile::remove(long dni) {
