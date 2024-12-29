@@ -27,7 +27,7 @@ Para el desarrollo del proyecto, se utilizó un dominio de datos basado en un co
 - **Edad**: Edad del individuo, comprendida entre 18 y 80 años.
 - **Sexo**: Género del individuo (F o M).
 
-En nuestro código se visualiza de la sigueinte manera:
+En nuestro código se visualiza de la siguiente manera:
 
 ```c++
 struct Record
