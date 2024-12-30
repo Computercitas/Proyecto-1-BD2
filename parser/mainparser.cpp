@@ -54,6 +54,13 @@ void loadTablesFromCSV(const string &filePath)
 
 int main()
 {
+    /*    const string csvFilePath = "C:/Users/Public/bd2/Proyecto-1-BD2/parser/tables.csv";
+
+    // Cargar tablas desde el archivo CSV al inicio
+    loadTablesFromCSV(csvFilePath);
+
+    AVLFile<long> avlFile("C:/Users/Public/bd2/Proyecto-1-BD2/estructuras/avl/avl_tree.dat");
+    ExtendibleHashing<long> extendibleHashing("C:/Users/Public/bd2/Proyecto-1-BD2/estructuras/extendiblehash/dni-person");*/
     const string csvFilePath = "D:/bd2/P1 maybe last/Proyecto-1-BD2/parser/tables.csv";
 
     // Cargar tablas desde el archivo CSV al inicio
