@@ -1,7 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include "SequentialFile.cpp"
+#include "SequentialFile.h"
 
 using namespace std;
 
