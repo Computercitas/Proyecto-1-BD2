@@ -223,29 +223,32 @@ public:
     {
         long bucketPos = getInitialBucketPosition(key);
 
-        fstream dataFile(this->_dataFile, ios::binary | ios::in);
+        fstream dataFile(_dataFile, ios::binary | ios::in);
         if (!dataFile.is_open())
             throw invalid_argument("Cannot open data file.");
 
         Bucket<Record> bucket;
-
         while (bucketPos != -1)
         {
             dataFile.seekg(bucketPos, ios::beg);
             dataFile.read((char *)&bucket, sizeof(bucket));
             auto result = bucket.search(toPosition(key));
-            if (result.first == true)
-                return result;
+            if (result.first)
+            {
+                if (result.second.is_deleted)
+                {
+                    // Si está marcado como eliminado, no devolverlo como encontrado
+                    dataFile.close();
+                    return {false, Record{}};
+                }
+                dataFile.close();
+                return result; // Encontrado y no eliminado
+            }
             bucketPos = bucket._next;
         }
 
         dataFile.close();
-
-        Record not_found;
-
-        not_found.empty_record();
-
-        return pair<bool, Record>(false, not_found);
+        return {false, Record{}}; // No encontrado
     }
 
     /*
@@ -305,13 +308,11 @@ public:
     {
         long bucketPos = getInitialBucketPosition(key);
 
-        Bucket<Record> bucket;
         fstream dataFile(_dataFile, ios::binary | ios::in | ios::out);
         if (!dataFile.is_open())
             throw invalid_argument("Cannot open data file Remove.");
 
-        bool found = false;
-
+        Bucket<Record> bucket;
         while (bucketPos != -1)
         {
             dataFile.seekg(bucketPos, ios::beg);
@@ -320,23 +321,70 @@ public:
             if (result.first == true)
             {
                 bucket.remove(toPosition(key));
-                found = true;
-                break;
+                dataFile.seekg(bucketPos, ios::beg);
+                dataFile.write((char *)&bucket, sizeof(bucket));
+                dataFile.close();
+                cout << "Key " << key << " removed successfully." << endl;
+                return;
             }
             bucketPos = bucket._next;
         }
 
-        if (found)
-        {
-            dataFile.seekg(bucketPos, ios::beg);
-            dataFile.write((char *)&bucket, sizeof(bucket));
-            dataFile.close();
-        }
-        else
-        {
-            cout << "Value of key " << key << " not found. Couldn't remove." << endl;
-        }
+        dataFile.close();
+        cout << "Key " << key << " not found. Cannot remove." << endl;
     }
 };
+
+void loadAndInsertData(const string &filePath, ExtendibleHashing<long> &hashTable)
+{
+    ifstream file(filePath);
+    if (!file.is_open())
+    {
+        cerr << "Error opening file: " << filePath << endl;
+        return;
+    }
+
+    string line;
+    vector<Record> records;
+
+    // Skip the header line
+    if (!getline(file, line))
+    {
+        cerr << "Error: File is empty or header missing." << endl;
+        return;
+    }
+
+    // Read the CSV file
+    while (getline(file, line))
+    {
+        cout << "Reading line: " << line << endl; // Debugging line
+        Record record;
+        try
+        {
+            record.read(line);
+            records.push_back(record);
+        }
+        catch (const exception &e)
+        {
+            cerr << "Error reading record: " << e.what() << endl;
+        }
+    }
+
+    file.close();
+
+    // Insert records into the hash table
+    for (const auto &record : records)
+    {
+        try
+        {
+            hashTable.insert(record.dni, record);
+            cout << "Inserted record with DNI: " << record.dni << endl;
+        }
+        catch (const exception &e)
+        {
+            cerr << "Error inserting record: " << e.what() << endl;
+        }
+    }
+}
 
 #endif // EXTENDIBLEHASHING_H

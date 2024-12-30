@@ -32,28 +32,30 @@ public:
     pair<bool, Record> search(long key)
     {
         for (long i = 0; i < _size; ++i)
+        {
             if (_values[i].first == key)
-                return pair<bool, Record>(true, _values[i].second);
-        return pair<bool, Record>(false, Record{});
+            {
+                if (_values[i].second.is_deleted)
+                {
+                    // Si está eliminado, devolver como no encontrado
+                    return {false, Record{}};
+                }
+                return {true, _values[i].second};
+            }
+        }
+        return {false, Record{}};
     }
 
     void remove(long key)
     {
-        bool found = false;
-        for (int i = 0; i < this->_size; i++)
+        for (int i = 0; i < _size; ++i)
         {
-            if (this->_values[i].first == key)
+            if (_values[i].first == key)
             {
-                found = true;
-            }
-
-            if (found && i != this->_size - 1)
-            {
-                this->_values[i] = this->_values[i + 1];
+                _values[i].second.is_deleted = true; // Marcar como eliminado
+                return;
             }
         }
-        this->_values[this->_size - 1] = pair<long, Record>{};
-        this->_size--;
     }
 
     void print()

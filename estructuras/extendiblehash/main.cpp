@@ -8,57 +8,13 @@ using namespace std;
 
 int main()
 {
-    ifstream file("../../data/SmallAdultDataset.csv");
-    if (!file.is_open())
-    {
-        cerr << "Error opening file" << endl;
-        return 1;
-    }
-
-    string line;
-    vector<Record> records;
-
-    // Skip the header line
-    getline(file, line);
-
-    // Read the CSV file
-    while (getline(file, line))
-    {
-        cout << "Reading line: " << line << endl; // Debugging line
-        Record record;
-        try
-        {
-            record.read(line);
-            records.push_back(record);
-        }
-        catch (const exception &e)
-        {
-            cerr << "Error reading record: " << e.what() << endl;
-        }
-    }
-
-    file.close();
-
-    // Create an ExtendibleHashing instance
+    // Crear instancia de ExtendibleHashing
     ExtendibleHashing<long> hashTable("dni-person", 2);
 
-    // Insert records into the hash table
-    for (const auto &record : records)
-    {
-        hashTable.insert(record.dni, record);
-    }
+    // Cargar e insertar datos desde el archivo CSV
+    loadAndInsertData("../../data/SmallAdultDataset.csv", hashTable);
 
-    // Search for a specific record
-    auto result = hashTable.search(records[0].dni);
-    if (result.first)
-    {
-        cout << "Record found:" << endl;
-        result.second.print();
-    }
-    else
-    {
-        cout << "Record not found" << endl;
-    }
+    // Realizar una búsqueda de prueba
 
     // Range search
     // Realizar búsqueda por rango en ingreso mensual
@@ -76,21 +32,22 @@ int main()
     */
 
     // Remove a specific record
-    cout << "Removing record with bookID: " << records[1].dni << endl;
-    hashTable.remove(records[1].dni);
+    // Eliminar un registro (opcional)
+    long removeDNI = 59237933; // Cambiar a un DNI válido para eliminar
+    hashTable.remove(removeDNI);
+    cout << "Record with DNI " << removeDNI << " removed successfully (if it existed)." << endl;
 
-    // Verify removal
-    result = hashTable.search(records[1].dni);
+    long searchDNI = 59237933; // Cambiar a un DNI válido del archivo
+    auto result = hashTable.search(searchDNI);
     if (result.first)
     {
-        cout << "Record found (should have been removed):" << endl;
+        cout << "Record found:" << endl;
         result.second.print();
     }
     else
     {
-        cout << "Record successfully removed" << endl;
+        cout << "Record not found for DNI: " << searchDNI << endl;
     }
-
     // Insert a new record
     Record newRecord;
     newRecord.dni = 99999999;

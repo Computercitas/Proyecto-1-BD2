@@ -1,35 +1,91 @@
 #include <iostream>
-#include "tokensSQL.h"
 #include "parserSQL.h"
+#include "../estructuras/avl/AVLFile.h"
+#include "../estructuras/extendiblehash/Extendible.h"
 
 using namespace std;
 
-int main() {
-    // Crear la instancia de AVLFile
-    AVLFile<long> avlFile("C:/Users/Public/bd2/Proyecto-1-BD2/estructuras/avl/avl_tree.dat");
+vector<Table> tables;
 
-    while (true) {
+// Función para guardar tablas en un archivo CSV
+void saveTablesToCSV(const string &filePath)
+{
+    ofstream file(filePath);
+    if (!file.is_open())
+    {
+        cerr << "Error: No se pudo crear o abrir el archivo " << filePath << " para escribir." << endl;
+        return;
+    }
+
+    for (const auto &table : tables)
+    {
+        file << table.index << "," << table.name << "," << table.file << endl;
+    }
+
+    file.close();
+    cout << "Tablas guardadas en " << filePath << endl;
+}
+
+// Función para cargar tablas desde un archivo CSV
+void loadTablesFromCSV(const string &filePath)
+{
+    ifstream file(filePath);
+    if (!file.is_open())
+    {
+        cout << "No se encontró el archivo " << filePath << ". Se iniciará sin tablas cargadas." << endl;
+        return;
+    }
+
+    string line;
+    while (getline(file, line))
+    {
+        stringstream ss(line);
+        string index, name, fileData;
+        if (getline(ss, index, ',') && getline(ss, name, ',') && getline(ss, fileData))
+        {
+            Table table = {name, fileData, index};
+            tables.push_back(table);
+        }
+    }
+
+    file.close();
+    cout << "Tablas cargadas desde " << filePath << endl;
+}
+
+int main()
+{
+    const string csvFilePath = "D:/bd2/P1 maybe last/Proyecto-1-BD2/parser/tables.csv";
+
+    // Cargar tablas desde el archivo CSV al inicio
+    loadTablesFromCSV(csvFilePath);
+
+    AVLFile<long> avlFile("D:/bd2/P1 maybe last/Proyecto-1-BD2/estructuras/avl/avl_tree.dat");
+    ExtendibleHashing<long> extendibleHashing("D:/bd2/P1 maybe last/Proyecto-1-BD2/estructuras/extendiblehash/dni-person");
+
+    while (true)
+    {
         cout << "Ingrese una consulta SQL (o 'exit' para salir):" << endl;
         string input;
         getline(cin, input);
 
-        // Salir si el usuario escribe 'exit'
-        if (input == "exit") {
+        if (input == "exit")
+        {
+            // Guardar tablas en el archivo CSV antes de salir
+            saveTablesToCSV(csvFilePath);
             cout << "Saliendo del programa..." << endl;
             break;
         }
 
-        // Crear el escáner con la entrada del usuario
         Scanner scanner(input.c_str());
+        Parser parser(&scanner, &avlFile, &extendibleHashing, tables);
 
-        // Crear el parser con el escáner y AVLFile
-        Parser parser(&scanner, &avlFile);
-
-        try {
-            // Procesar la entrada
+        try
+        {
             parser.parse();
             cout << "Consulta procesada correctamente." << endl;
-        } catch (const exception& e) {
+        }
+        catch (const exception &e)
+        {
             cerr << "Error al procesar la consulta: " << e.what() << endl;
         }
     }
