@@ -62,6 +62,7 @@ public:
 
     ~AVLFile() = default;
 
+
     bool fileEmpty(ifstream &file)
     {
         return file.peek() == ifstream::traits_type::eof();
@@ -74,6 +75,47 @@ public:
         Nodo<TK> parent_record;
         bool x = add(root, parent_record, record);
         writeFileRoot();
+
+        file.close();
+    }
+
+    std::shared_ptr<Nodo<TK>> search(TK key)
+    {
+        file.open(file_name, ios::binary | ios::in | ios::out);
+
+        auto result = search(root, key);
+
+        file.close();
+
+        return result; // Devuelve el puntero al nodo encontrado o nullptr
+    }
+
+    void loadData(const std::string &csvFile)
+    {
+        std::ifstream file(csvFile);
+
+        if (!file.is_open())
+        {
+            throw std::runtime_error("Error al abrir el archivo " + csvFile);
+        }
+
+        std::string line;
+        bool isHeader = true;
+
+        while (std::getline(file, line))
+        {
+            if (isHeader)
+            {
+                isHeader = false;
+                continue;
+            }
+
+            Record record;
+            record.read(line);
+
+            Nodo<TK> node(record);
+            this->add(node);
+        }
 
         file.close();
     }
@@ -119,17 +161,6 @@ public:
         file.close();
 
         return sz;
-    }
-
-    Nodo<TK> search(TK key)
-    {
-        file.open(file_name, ios::binary | ios::in | ios::out);
-
-        shared_ptr<Nodo<TK>> record = search(root, key);
-
-        file.close();
-
-        return *record;
     }
 
     std::vector<Nodo<TK>> rangeSearch(int begin_key, int end_key)
@@ -488,28 +519,30 @@ private:
     {
         if (pos == NULL_POS)
         {
-            return nullptr;
+            return nullptr; // Nodo no encontrado
+        }
+
+        auto current = std::make_shared<Nodo<TK>>();
+        file.seekg(HEADER_SIZE + pos * sizeof(Nodo<TK>), ios::beg);
+        file.read(reinterpret_cast<char *>(&(*current)), sizeof(Nodo<TK>));
+
+        if (current->next_del != -2)
+        {
+            return nullptr; // Ignorar nodos eliminados
+        }
+
+        if (key < current->key)
+        {
+            return search(current->left, key);
+        }
+        else if (key > current->key)
+        {
+            return search(current->right, key);
         }
         else
         {
-            shared_ptr<Nodo<TK>> current = make_shared<Nodo<TK>>();
-            file.seekg(HEADER_SIZE + pos * sizeof(Nodo<TK>), ios::beg);
-            file.read(reinterpret_cast<char *>(&(*current)), sizeof(Nodo<TK>));
-
-            if (key < current->key)
-            {
-                return search(current->left, key);
-            }
-            else if (key > current->key)
-            {
-                return search(current->right, key);
-            }
-            else if (key == current->key)
-            {
-                return current;
-            }
+            return current; // Nodo encontrado
         }
-        throw "lol";
     }
 
     TK minValue(int pos)

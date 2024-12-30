@@ -8,62 +8,14 @@ using namespace std;
 int main()
 {
     // Archivo CSV con los datos
-    string csv_file = "../../data/SmallAdultDataset.csv";
-    ifstream file(csv_file);
-
-    if (!file.is_open())
-    {
-        cerr << "Error al abrir el archivo " << csv_file << endl;
-        return 1;
-    }
-
-    // Crear el AVL Tree
     AVLFile<long> avlTree("avl_tree.dat");
-
-    string line;
-    bool isHeader = true;
-
-    // Leer línea por línea
-    while (getline(file, line))
-    {
-        if (isHeader)
-        {
-            isHeader = false; // Ignorar encabezado
-            continue;
-        }
-
-        // Crear un Record a partir de la línea
-        Record record;
-        record.read(line);
-
-        // Crear un nodo AVL a partir del Record
-        Nodo<long> node(record);
-
-        // Insertar en el árbol
-        avlTree.add(node);
-    }
-
-    file.close();
+    avlTree.loadData("../../data/SmallAdultDataset.csv");
 
     // Pruebas de inserción
     cout << "Pruebas de Inserción: " << endl;
     for (const auto &node : avlTree.seekAll())
     {
         node.showData();
-    }
-
-    // Prueba de búsqueda
-    cout << "||||||||||||||||||||||||||||||||||||||||||||||||" << endl;
-    cout << "\nPrueba de Búsqueda: " << endl;
-    long searchKey = 51118137; // dni a buscar
-    try
-    {
-        Nodo<long> foundNode = avlTree.search(searchKey);
-        foundNode.showData();
-    }
-    catch (const exception &e)
-    {
-        cerr << "No se encontró el nodo con la clave: " << searchKey << endl;
     }
 
     // Prueba de eliminación
@@ -86,6 +38,21 @@ int main()
     for (const auto &nodo : results)
     {
         nodo.showData();
+    }
+
+    // Prueba de búsqueda
+    cout << "||||||||||||||||||||||||||||||||||||||||||||||||" << endl;
+    cout << "\nPrueba de Búsqueda: " << endl;
+    long searchKey = 96165; // DNI a buscar
+
+    auto foundNodePtr = avlTree.search(searchKey);
+    if (!foundNodePtr)
+    {
+        cerr << "No se encontró el nodo con la clave: " << searchKey << endl;
+    }
+    else
+    {
+        foundNodePtr->showData();
     }
 
     return 0;

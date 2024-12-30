@@ -65,6 +65,7 @@
     "initializer_list": "cpp",
     "ranges": "cpp",
     "regex": "cpp",
-    "utility": "cpp"
+    "utility": "cpp",
+    "algorithm": "cpp"
   }
 }

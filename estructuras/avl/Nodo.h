@@ -68,7 +68,7 @@ struct Nodo
              << " - right: " << right
              << " - height: " << height
              << " - next_del: " << next_del << endl;
-        cout << "\nDetalles del libro:" << endl;
+        cout << "\nDetalles de la persona:" << endl;
         record.print();
     }
 };
