@@ -181,7 +181,7 @@ private:
         }
         else if (table->index == "EXTENDIBLE")
         {
-            long key = stol(condition.value1); // Conversión consistente a `long`
+            long key = stol(condition.value1); // Conversión consistente a long
             auto result = extendibleFile->search(key);
             if (!result.first)
             {
@@ -196,20 +196,44 @@ private:
         }
         else if (table->index == "SEQUENTIAL")
         {
-            try
+            if (condition.op == "=")
             {
-                Record record = sequentialFile->search(stol(condition.value1));
-                cout << "---- Selecting from " << tableName << " where " << condition.field
-                     << " = " << condition.value1 << ": " << endl;
-                record.print();
+                try
+                {
+                    Record record = sequentialFile->search(stol(condition.value1));
+                    cout << "---- Selecting from " << tableName << " where " << condition.field
+                         << " = " << condition.value1 << ": " << endl;
+                    record.print();
+                }
+                catch (const exception &e)
+                {
+                    cerr << "Error: " << e.what() << endl;
+                }
             }
-            catch (const exception &e)
+            else if (condition.op == "between")
             {
-                cerr << "Error: " << e.what() << endl;
+                try
+                {
+                    long minValue = stol(condition.value1);
+                    long maxValue = stol(condition.value2);
+                    auto results = sequentialFile->rangeSearch(minValue, maxValue);
+
+                    cout << "---- Selecting from " << tableName << " where " << condition.field
+                         << " BETWEEN " << condition.value1 << " AND " << condition.value2 << ": " << endl;
+
+                    for (const auto &record : results)
+                    {
+                        record.print();
+                    }
+                }
+                catch (const exception &e)
+                {
+                    cerr << "Error: " << e.what() << endl;
+                }
             }
         }
     }
-
+    
     void parseInsert()
     {
         expect(Token::INSERT);
