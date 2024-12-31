@@ -512,7 +512,7 @@ Al salir, las tablas se guardan automáticamente en `tables.csv` para ser cargad
   - A partir de 4000 registros, el tiempo de inserción aumenta significativamente debido al merge, lo que lleva a una complejidad de O(m log m + n).
 - AVL File:
   - El tiempo sigue una crecimiento logarítmico (O(log n)) de manera constante, incluso a tamaños grandes (hasta 16000 registros). No hay un cambio brusco en la complejidad, ya que siempre se mantiene eficiente.
-- Sequential File:
+- Extendible Hashing:
   - En el caso promedio, la inserción es O(1), y los tiempos son bajos hasta 4000 registros.
   - Sin embargo, a partir de 8000 registros, el tiempo crece de manera más pronunciada debido a los splits masivos en el peor caso, alcanzando una complejidad de O(n).
 
