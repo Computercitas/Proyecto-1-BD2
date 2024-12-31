@@ -10,6 +10,7 @@
 #include "tokensSQL.h"
 #include "../estructuras/avl/AVLFile.h"
 #include "../estructuras/extendiblehash/Extendible.h"
+#include "../estructuras/sequentialfile/SequentialFile.h"
 
 using namespace std;
 
@@ -31,8 +32,8 @@ struct Condition
 class Parser
 {
 public:
-    Parser(Scanner *scanner, AVLFile<long> *avlFile, ExtendibleHashing<long> *extendibleFile, vector<Table> &tables)
-        : scanner(scanner), avlFile(avlFile), extendibleFile(extendibleFile), tables(tables)
+    Parser(Scanner *scanner, AVLFile<long> *avlFile, ExtendibleHashing<long> *extendibleFile, SequentialFile *sequentialFile, vector<Table> &tables)
+        : scanner(scanner), avlFile(avlFile), extendibleFile(extendibleFile), sequentialFile(sequentialFile), tables(tables)
     {
         currentToken = scanner->nextToken();
     }
@@ -58,6 +59,7 @@ private:
     Token *currentToken;
     AVLFile<long> *avlFile;
     ExtendibleHashing<long> *extendibleFile;
+    SequentialFile *sequentialFile;
     vector<Table> &tables;
 
     string normalize(const string &str)
@@ -103,7 +105,7 @@ private:
         expect(Token::USING);
         expect(Token::INDEX);
 
-        Token *indexType = expectOneOf({Token::AVL, Token::EXTENDIBLE});
+        Token *indexType = expectOneOf({Token::AVL, Token::EXTENDIBLE, Token::SEQUENTIAL});
         expect(Token::LPARENT);
         string indexField = expect(Token::VALUE)->lexema;
         expect(Token::RPARENT);
@@ -118,6 +120,11 @@ private:
         else if (indexType->type == Token::EXTENDIBLE)
         {
             loadAndInsertData(fileName, *extendibleFile);
+        }
+
+        else if (indexType->type == Token::SEQUENTIAL)
+        {
+            loadCSVDataSeq(fileName, *sequentialFile);
         }
 
         cout << "---- Created table " << tableName << " from file " << fileName
@@ -187,6 +194,20 @@ private:
                 result.second.print();
             }
         }
+        else if (table->index == "SEQUENTIAL")
+        {
+            try
+            {
+                Record record = sequentialFile->search(stol(condition.value1));
+                cout << "---- Selecting from " << tableName << " where " << condition.field
+                     << " = " << condition.value1 << ": " << endl;
+                record.print();
+            }
+            catch (const exception &e)
+            {
+                cerr << "Error: " << e.what() << endl;
+            }
+        }
     }
 
     void parseInsert()
@@ -226,6 +247,13 @@ private:
         {
             extendibleFile->insert(record.dni, record);
         }
+        else if (table->index == "SEQUENTIAL")
+        {
+            if (!sequentialFile->add(record))
+            {
+                cerr << "Error: Registro duplicado. No se pudo insertar." << endl;
+            }
+        }
 
         cout << "---- Inserted into " << tableName << " values: ";
         for (const string &value : values)
@@ -260,6 +288,18 @@ private:
         {
             long key = stol(condition.value1);
             extendibleFile->remove(key);
+        }
+        else if (table->index == "SEQUENTIAL")
+        {
+            try
+            {
+                sequentialFile->remove(stol(condition.value1));
+                cout << "Registro eliminado con éxito." << endl;
+            }
+            catch (const exception &e)
+            {
+                cerr << "Error: " << e.what() << endl;
+            }
         }
 
         cout << "---- Deleted from " << tableName << " where " << condition.field

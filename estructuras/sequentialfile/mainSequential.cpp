@@ -7,51 +7,12 @@ using namespace std;
 
 int main()
 {
-    // Archivo CSV con los datos
-    string csv_file = "../../data/SmallAdultDataset.csv";
-    ifstream file(csv_file);
-
-    if (!file.is_open())
-    {
-        cerr << "Error al abrir el archivo " << csv_file << endl;
-        return 1;
-    }
-
-    // Crear el archivo secuencial
     SequentialFile sequentialFile("main.dat", "aux.dat");
+    std::string csvFilePath = "../../data/SmallAdultDataset.csv";
 
-    string line;
-    bool isHeader = true;
-    int insertedCount = 0;  // Contador de registros insertados
-    // Leer línea por línea del archivo CSV
-    while (getline(file, line))
-    {
-        if (isHeader)
-        {
-            isHeader = false; // Ignorar encabezado
-            continue;
-        }
-
-        // Crear un Record a partir de la línea
-        Record record;
-        record.read(line);
-
-        // Agregar el registro al archivo secuencial
-        if (sequentialFile.add(record))
-        {
-            insertedCount++;  // Incrementar el contador si se agrega el registro
-            cout << "Registro agregado: " << record.dni << endl;
-        }
-        else
-        {
-            cout << "Registro duplicado (no agregado): " << record.dni << endl;
-        }
-    }
-
-    file.close();
-
+    // Cargar los datos desde el CSV
+    loadCSVDataSeq(csvFilePath, sequentialFile);
     // Mostrar el número total de elementos insertados
-    cout << "\nNumero de registros insertados: " << insertedCount << endl;
 
     // Prueba de búsqueda
     cout << "\n||||||||||||||||||||||||||||||||||||||||||||||||" << endl;
