@@ -325,10 +325,13 @@ El SQL Parser fue diseñado para interpretar y ejecutar consultas SQL básicas c
 El parser funciona mediante un flujo que convierte una entrada en texto (consulta SQL) en tokens, los interpreta según una gramática definida y ejecuta las operaciones correspondientes sobre las estructuras de datos.
 
 ## ParserSQL.h
+
 El archivo `ParserSQL.h` contiene la implementación del parser que interpreta y ejecuta las consultas SQL. Es el componente principal que traduce los comandos SQL en acciones sobre las estructuras de datos.
 
 ### Clases Principales
+
 1. **`Parser`**:
+
    - **Responsabilidad**: Interpretar tokens generados por el `Scanner` y realizar operaciones como `CREATE`, `SELECT`, `INSERT`, y `DELETE`.
    - **Métodos Principales**:
      - `parseCreateTable`: Interpreta el comando `CREATE TABLE` y carga los datos en la estructura especificada.
@@ -337,6 +340,7 @@ El archivo `ParserSQL.h` contiene la implementación del parser que interpreta y
      - `parseDelete`: Elimina registros según condiciones.
 
 2. **`Table`**:
+
    - **Responsabilidad**: Representar la configuración de una tabla.
    - **Atributos**:
      - `name`: Nombre de la tabla.
@@ -345,9 +349,9 @@ El archivo `ParserSQL.h` contiene la implementación del parser que interpreta y
 
 3. **`Condition`**:
    - **Responsabilidad**: Representar condiciones de las consultas SQL (e.g., `WHERE field = value`).
-  
 
 ### Ejemplo de Implementación
+
 ```cpp
 void parseSelect() {
     expect(Token::SELECT);
@@ -374,41 +378,43 @@ void parseSelect() {
 ```
 
 ## tokensSQL.h
+
 El archivo `tokensSQL.h` define los tokens reconocidos por el parser y el escáner. Estos tokens representan las palabras clave, operadores y estructuras reconocidas del lenguaje SQL.
 
 ### Componentes Principales
 
 1. **Clase `Token`**:
+
    - Representa un token generado por el escáner.
    - **Atributos**:
      - `type`: Tipo de token (e.g., `SELECT`, `CREATE`, `ID`).
      - `lexema`: El valor asociado al token.
 
 2. **Clase `Scanner`**:
+
    - **Responsabilidad**: Leer la entrada en texto y generar una secuencia de tokens.
    - **Métodos Clave**:
      - `nextToken`: Devuelve el siguiente token en la entrada.
 
 3. **Tabla de Tokens**:
-   | Token         | Descripción                          |
+   | Token | Descripción |
    |---------------|--------------------------------------|
-   | `CREATE`      | Crear una nueva tabla               |
-   | `SELECT`      | Consultar registros                 |
-   | `INSERT`      | Insertar un nuevo registro          |
-   | `DELETE`      | Eliminar registros                  |
-   | `BETWEEN`     | Consultar un rango de valores       |
-   | `EQUAL` (`=`) | Condición de igualdad               |
-   | `ID`          | Nombre de la tabla                  |
-   | `VALUE`       | Valores para registros o condición  |
-   | `FILE`        | Especifica un archivo de datos      |
-   | `INDEX`       | Define el tipo de índice            |
-   | `LPARENT`     | Paréntesis izquierdo `(`            |
-   | `RPARENT`     | Paréntesis derecho `)`              |
-   | `COLON` (`:`) | Separador en listas de valores      |
-   | `ALL`         | Indicador de selección completa     |
+   | `CREATE` | Crear una nueva tabla |
+   | `SELECT` | Consultar registros |
+   | `INSERT` | Insertar un nuevo registro |
+   | `DELETE` | Eliminar registros |
+   | `BETWEEN` | Consultar un rango de valores |
+   | `EQUAL` (`=`) | Condición de igualdad |
+   | `ID` | Nombre de la tabla |
+   | `VALUE` | Valores para registros o condición |
+   | `FILE` | Especifica un archivo de datos |
+   | `INDEX` | Define el tipo de índice |
+   | `LPARENT` | Paréntesis izquierdo `(` |
+   | `RPARENT` | Paréntesis derecho `)` |
+   | `COLON` (`:`) | Separador en listas de valores |
+   | `ALL` | Indicador de selección completa |
 
 ## Gramática del Parser
-
 
 ```ebnf
 <statement> ::= <create_table> | <select> | <insert> | <delete>
@@ -431,14 +437,19 @@ El archivo `tokensSQL.h` define los tokens reconocidos por el parser y el escán
 ```
 
 ### Desglose por Comandos
+
 1. **`CREATE TABLE`**:
+
    - Crea una nueva tabla basada en un archivo y especifica la estructura de índice utilizada.
+
    ```sql
    CREATE TABLE Adult FROM FILE 'D:/bd2/P1 maybe last/Proyecto-1-BD2/data/AdultDataset.csv' USING INDEX AVL('DNI');
    ```
 
 2. **`SELECT`**:
+
    - Permite consultar registros por igualdad o rango.
+
    ```sql
    SELECT * FROM Adult WHERE DNI = '12345678';
    SELECT * FROM Adult WHERE SUELDO BETWEEN '4000' AND '5000';
@@ -449,47 +460,82 @@ El archivo `tokensSQL.h` define los tokens reconocidos por el parser y el escán
    ```sql
    INSERT INTO Adult VALUES ('12345678', 'Mariel Tovar Tolentino', 'CS', 'Soltero/a', '5000', '21', 'F');
    ```
-   
 4. **`DELETE`**:
    - Elimina registros de una tabla según una condición.
    ```sql
    DELETE FROM Adult WHERE DNI='12345678';
    ```
 
-
 # Pruebas de uso
 
 A continuación mostramos ejemplos para usar el programa:
 
 ### Paso 1: Acceder al Proyecto
+
 1. Abre una terminal y navega a la carpeta `parser` del proyecto.
    ```bash
    cd path/to/Proyecto-1-BD2/parser
    ```
 
 ### Paso 2: Ejecutar el Programa
+
 Ejecuta el programa compilado desde la terminal:
+
 ```bash
 ./programa
 ```
 
 ### Paso 3: Realizar Consultas
+
 Introduce consultas SQL según el formato soportado. En el archivo `comandos.txt` se pueden encontrar ejemplos adicionales de consultas SQL para cada estructura soportada. Para utilizarlos, asegúrate de ajustar las rutas de los archivos mencionados en los comandos para que sean funcionales en tu entorno.
- 
+
 ### Paso 4: Salir del Programa
+
 Para salir, escribe `exit` en la terminal:
+
 ```bash
 exit
 ```
+
 Al salir, las tablas se guardan automáticamente en `tables.csv` para ser cargadas en la siguiente ejecución.
-
-
 
 # Resultados experimentales
 
 ## Inserción
 
+<img src="./images/InsertP1.PNG" width="700"/>
+
+### Análisis
+
+- Sequential File:
+  - Para 1000 y 2000 registros, el tiempo es casi constante, ya que la inserción es O(1).
+  - A partir de 4000 registros, el tiempo de inserción aumenta significativamente debido al merge, lo que lleva a una complejidad de O(m log m + n).
+- AVL File:
+  - El tiempo sigue una crecimiento logarítmico (O(log n)) de manera constante, incluso a tamaños grandes (hasta 16000 registros). No hay un cambio brusco en la complejidad, ya que siempre se mantiene eficiente.
+- Sequential File:
+  - En el caso promedio, la inserción es O(1), y los tiempos son bajos hasta 4000 registros.
+  - Sin embargo, a partir de 8000 registros, el tiempo crece de manera más pronunciada debido a los splits masivos en el peor caso, alcanzando una complejidad de O(n).
+
 ## Búsqueda
 
+<img src="./images/SEARCHP1.PNG" width="700"/>
+
+| Tamaño de Datos (N) | AVL File (ms) | Secuencial File (ms) | Extendible Hash (ms) |
+| ------------------- | ------------- | -------------------- | -------------------- |
+| 1000                | 12            | 3                    | 1                    |
+| 2000                | 24            | 7                    | 2                    |
+| 4000                | 48            | 20                   | 5                    |
+| 8000                | 96            | 45                   | 10                   |
+| 16000               | 192           | 100                  | 20                   |
+
+### Análisis:
+
+- Extendible Hashing ofrece un excelente rendimiento en términos de tiempo de búsqueda. Cumple con la complejidad O(1) en promedio para los tamaños más pequeños de datos (hasta 4000 registros), y aunque su tiempo crece ligeramente a partir de 8000 registros debido al peor caso (O(log n)), sigue siendo una opción muy eficiente comparada con los otros métodos.
+- Sequential File sigue O(log n) en el archivo principal, pero a medida que el tamaño aumenta, su comportamiento lineal en el archivo auxiliar (O(m)) comienza a influir más, haciendo que la curva se haga más pronunciada a partir de los 8000 registros.
+- AVL mantiene una O(log n) constante y eficiente para todos los tamaños de datos. Esto lo convierte en una opción sólida para búsquedas rápidas, aunque no tan rápida como el Extendible Hashing en los primeros tamaños de datos.
+
 # Video funcional
+
 A continuación se adjunta el video donde explicamos el funcionamiento del proyecto:
+
+[Video Proyecto 1 en Drive](https://drive.google.com/drive/folders/1PICXK1EqS86VyYQRm-APzpn1PcWLwjj7?usp=sharing)
