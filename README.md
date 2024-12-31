@@ -320,53 +320,170 @@ El **Extendible Hashing** no soporta nativamente las búsquedas por rango debido
 
 ## SQL Parser
 
-### Descripción
+El SQL Parser fue diseñado para interpretar y ejecutar consultas SQL básicas como `CREATE`, `SELECT`, `INSERT`, y `DELETE`, permitiendo operar sobre tres estructuras de datos principales: **AVL File**, **Extendible Hashing**, y **Sequential File**. Estas operaciones son realizadas sobre tablas definidas en archivos y cargadas en memoria.
 
-Este parser permite la interpretación de instrucciones SQL comunes, como `CREATE`, `INSERT`, `DELETE`, y `SELECT`, facilitando la integración de consultas en aplicaciones que requieren manipulación de bases de datos.
+El parser funciona mediante un flujo que convierte una entrada en texto (consulta SQL) en tokens, los interpreta según una gramática definida y ejecuta las operaciones correspondientes sobre las estructuras de datos.
 
-### Características
+## ParserSQL.h
+El archivo `ParserSQL.h` contiene la implementación del parser que interpreta y ejecuta las consultas SQL. Es el componente principal que traduce los comandos SQL en acciones sobre las estructuras de datos.
 
-- Análisis de Consultas: Capaz de procesar sentencias SQL complejas y desglosarlas en componentes estructurales, permitiendo su interpretación y ejecución.
-- Soporte para Múltiples Comandos: Maneja una variedad de comandos SQL, incluyendo:
-  - `CREATE TABLE`: Crea nuevas tablas en la base de datos con la posibilidad de especificar rutas de archivo y columnas clave.
-  - `INSERT`: Permite la inserción de nuevos registros en las tablas existentes.
-  - `DELETE`: Facilita la eliminación de registros basados en condiciones específicas.
-  - `SELECT`: Realiza consultas para recuperar datos de las tablas, incluyendo la capacidad de realizar búsquedas por rango.
+### Clases Principales
+1. **`Parser`**:
+   - **Responsabilidad**: Interpretar tokens generados por el `Scanner` y realizar operaciones como `CREATE`, `SELECT`, `INSERT`, y `DELETE`.
+   - **Métodos Principales**:
+     - `parseCreateTable`: Interpreta el comando `CREATE TABLE` y carga los datos en la estructura especificada.
+     - `parseSelect`: Maneja consultas de selección, incluyendo búsquedas por igualdad (`=`) y rango (`BETWEEN`).
+     - `parseInsert`: Agrega un nuevo registro a la estructura asociada.
+     - `parseDelete`: Elimina registros según condiciones.
 
-### Gramática del Parser
+2. **`Table`**:
+   - **Responsabilidad**: Representar la configuración de una tabla.
+   - **Atributos**:
+     - `name`: Nombre de la tabla.
+     - `file`: Ruta del archivo asociado a los datos.
+     - `index`: Tipo de estructura de índice usado (e.g., `AVL`, `EXTENDIBLE`, `SEQUENTIAL`).
 
-```plaintext
-Program := CREATE | INSERT | DELETE | SELECT
+3. **`Condition`**:
+   - **Responsabilidad**: Representar condiciones de las consultas SQL (e.g., `WHERE field = value`).
+  
 
-CREATE ::= "create" "table" TABLE_ID "from" "file" filename "using" "index" structure "(" Key ")";
+### Ejemplo de Implementación
+```cpp
+void parseSelect() {
+    expect(Token::SELECT);
+    expect(Token::ALL);
+    expect(Token::FROM);
+    string tableName = expect(Token::ID)->lexema;
+    expect(Token::WHERE);
+    Condition condition = parseCondition();
 
-INSERT ::= "insert" "into" TABLE_ID "values" (unsigned long, char, char, unsigned short, char);
+    Table* table = findTable(tableName);
+    if (!table) {
+        error("Table not found: " + tableName);
+        return;
+    }
 
-DELETE ::= "delete" "from" TABLE_ID "where" KEY "=" value;
-
-SELECT ::= "select" "*" "from" TABLE_ID "where" KEY "between" value1 "and" value2
-          | "select" "*" "from" TABLE_ID "where" KEY "=" value;
+    if (table->index == "AVL") {
+        // Lógica para AVL
+    } else if (table->index == "EXTENDIBLE") {
+        // Lógica para Hash Extensible
+    } else if (table->index == "SEQUENTIAL") {
+        // Lógica para Archivo Secuencial
+    }
+}
 ```
 
-### Estructura del Parser
+## tokensSQL.h
+El archivo `tokensSQL.h` define los tokens reconocidos por el parser y el escáner. Estos tokens representan las palabras clave, operadores y estructuras reconocidas del lenguaje SQL.
 
-- Token: Representa los tokens individuales generados por el analizador léxico, incluyendo tipos como identificadores, números, palabras reservadas y símbolos.
-- Scanner: Responsable de leer la entrada de texto y generar tokens. Utiliza un enfoque basado en la máquina de estados para identificar diferentes tipos de lexemas.
-- Parser: La clase principal que analiza los tokens generados por el scanner y construye una representación estructural de las consultas SQL, devolviendo objetos de declaración (como `CreateTableStatement`).
-- Declaraciones: Clases que representan las diversas instrucciones SQL, como `CreateTableStatement`, `InsertStatement`, y `DeleteStatement`.
+### Componentes Principales
 
-### Ejemplos de uso
+1. **Clase `Token`**:
+   - Representa un token generado por el escáner.
+   - **Atributos**:
+     - `type`: Tipo de token (e.g., `SELECT`, `CREATE`, `ID`).
+     - `lexema`: El valor asociado al token.
 
-    // Parser para leer una consulta
-    const char* input = "create table Books from file \"data.csv\" using index sequential(ISBN);";
-    const char* input2 = "insert into Books values (\"9783161484100\", \"The Catcher in the Rye\", \"J D Salinger\", 1951, \"Brown and Company\");";
-    const char* input3 = "select * from Books where ISBN = 9783161484100;";
-    const char* input4 = "delete from Books where ISBN = 9783161484100;";
-    const char* input5 = "select * from Books where ISBN between 11 and 50;";
+2. **Clase `Scanner`**:
+   - **Responsabilidad**: Leer la entrada en texto y generar una secuencia de tokens.
+   - **Métodos Clave**:
+     - `nextToken`: Devuelve el siguiente token en la entrada.
 
-    // Crea un scanner con la consulta
-    Scanner* scanner = new Scanner(input); // Cambiar `input1` a `input2`, `input3` o `input4` para otras consultas
-    Parser* parser = new Parser(scanner);
+3. **Tabla de Tokens**:
+   | Token         | Descripción                          |
+   |---------------|--------------------------------------|
+   | `CREATE`      | Crear una nueva tabla               |
+   | `SELECT`      | Consultar registros                 |
+   | `INSERT`      | Insertar un nuevo registro          |
+   | `DELETE`      | Eliminar registros                  |
+   | `BETWEEN`     | Consultar un rango de valores       |
+   | `EQUAL` (`=`) | Condición de igualdad               |
+   | `ID`          | Nombre de la tabla                  |
+   | `VALUE`       | Valores para registros o condición  |
+   | `FILE`        | Especifica un archivo de datos      |
+   | `INDEX`       | Define el tipo de índice            |
+   | `LPARENT`     | Paréntesis izquierdo `(`            |
+   | `RPARENT`     | Paréntesis derecho `)`              |
+   | `COLON` (`:`) | Separador en listas de valores      |
+   | `ALL`         | Indicador de selección completa     |
+
+## Gramática del Parser
+
+
+```ebnf
+<statement> ::= <create_table> | <select> | <insert> | <delete>
+
+<create_table> ::= "CREATE" "TABLE" <table_name> "FROM" "FILE" <value> "USING" "INDEX" <index_type> "(" <field_name> ")"
+<index_type> ::= "AVL" | "EXTENDIBLE" | "SEQUENTIAL"
+
+<select> ::= "SELECT" "ALL" "FROM" <table_name> "WHERE" <condition>
+
+<insert> ::= "INSERT" "INTO" <table_name> "VALUES" "(" <value_list> ")"
+<value_list> ::= <value> | <value> ":" <value_list>
+
+<delete> ::= "DELETE" "FROM" <table_name> "WHERE" <condition>
+
+<condition> ::= <field_name> "=" <value> | <field_name> "BETWEEN" <value> "AND" <value>
+
+<table_name> ::= /* Nombre de la tabla */
+<field_name> ::= /* Nombre del campo */
+<value> ::= /* strings o números */
+```
+
+### Desglose por Comandos
+1. **`CREATE TABLE`**:
+   - Crea una nueva tabla basada en un archivo y especifica la estructura de índice utilizada.
+   ```sql
+   CREATE TABLE Adult FROM FILE 'D:/bd2/P1 maybe last/Proyecto-1-BD2/data/AdultDataset.csv' USING INDEX AVL('DNI');
+   ```
+
+2. **`SELECT`**:
+   - Permite consultar registros por igualdad o rango.
+   ```sql
+   SELECT * FROM Adult WHERE DNI = '12345678';
+   SELECT * FROM Adult WHERE SUELDO BETWEEN '4000' AND '5000';
+   ```
+
+3. **`INSERT`**:
+   - Inserta un nuevo registro en una tabla.
+   ```sql
+   INSERT INTO Adult VALUES ('12345678', 'Mariel Tovar Tolentino', 'CS', 'Soltero/a', '5000', '21', 'F');
+   ```
+   
+4. **`DELETE`**:
+   - Elimina registros de una tabla según una condición.
+   ```sql
+   DELETE FROM Adult WHERE DNI='12345678';
+   ```
+
+
+# Pruebas de uso
+
+A continuación mostramos ejemplos para usar el programa:
+
+### Paso 1: Acceder al Proyecto
+1. Abre una terminal y navega a la carpeta `parser` del proyecto.
+   ```bash
+   cd path/to/Proyecto-1-BD2/parser
+   ```
+
+### Paso 2: Ejecutar el Programa
+Ejecuta el programa compilado desde la terminal:
+```bash
+./programa
+```
+
+### Paso 3: Realizar Consultas
+Introduce consultas SQL según el formato soportado. En el archivo `comandos.txt` se pueden encontrar ejemplos adicionales de consultas SQL para cada estructura soportada. Para utilizarlos, asegúrate de ajustar las rutas de los archivos mencionados en los comandos para que sean funcionales en tu entorno.
+ 
+### Paso 4: Salir del Programa
+Para salir, escribe `exit` en la terminal:
+```bash
+exit
+```
+Al salir, las tablas se guardan automáticamente en `tables.csv` para ser cargadas en la siguiente ejecución.
+
+
 
 # Resultados experimentales
 
@@ -374,10 +491,5 @@ SELECT ::= "select" "*" "from" TABLE_ID "where" KEY "between" value1 "and" value
 
 ## Búsqueda
 
-# Pruebas de uso
-
-La implementación de una GUI utilizando librerías queda pendiente.
-
-# Video
-
+# Video funcional
 A continuación se adjunta el video donde explicamos el funcionamiento del proyecto:
